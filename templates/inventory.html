@@ -1,0 +1,574 @@
+{% extends "index.html" %}
+{% block title %}Inventory | Kape Tubong{% endblock %}
+{% block content %}
+
+<style>
+.inv-page {
+  padding: 20px;
+  font-family: var(--font);
+}
+
+/* ── Header ── */
+.inv-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: rgba(15,14,12,.94);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px;
+  margin: -20px -20px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.inv-title-wrap h1 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+.inv-title-wrap p {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 2px 0 0;
+}
+
+.inv-filter-group {
+  display: flex;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+.inv-filter-btn {
+  font-size: 11.5px;
+  font-family: var(--font);
+  padding: 5px 12px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--muted2);
+  cursor: pointer;
+  transition: .15s;
+  font-weight: 500;
+}
+.inv-filter-btn:hover { color: var(--text); background: var(--bg4); }
+.inv-filter-btn.active { background: var(--accent); color: var(--bg); }
+
+/* ── Stat cards ── */
+.inv-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.stat-tile {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: .2s;
+}
+.stat-tile:hover { border-color: var(--border2); transform: translateY(-1px); }
+.stat-icon-box {
+  width: 36px; height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.stat-icon-box.all     { background: rgba(212,169,106,.12); color: var(--accent); }
+.stat-icon-box.low     { background: rgba(212,149,74,.12);  color: var(--warn); }
+.stat-icon-box.out     { background: rgba(212,96,96,.12);   color: var(--danger); }
+.stat-tile-label { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+.stat-tile-value { font-size: 1.5rem; font-weight: 700; line-height: 1; font-family: var(--mono); color: var(--text); }
+
+/* ── Panel ── */
+.inv-panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.inv-panel-head {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.search-bar {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 10px;
+  transition: .15s;
+}
+.search-bar:focus-within { border-color: var(--accent); }
+.search-bar i { color: var(--muted); font-size: 11px; }
+.search-bar input {
+  border: none; background: transparent; outline: none;
+  color: var(--text); font-family: var(--font); font-size: 12.5px;
+  padding: 8px 0; width: 100%;
+}
+.search-bar input::placeholder { color: var(--muted); }
+
+.btn-ghost-sm {
+  font-size: 11.5px;
+  padding: 7px 11px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--muted2);
+  cursor: pointer;
+  font-family: var(--font);
+  transition: .15s;
+  display: flex; align-items: center; gap: 5px;
+  white-space: nowrap;
+}
+.btn-ghost-sm:hover { color: var(--text); border-color: var(--border2); }
+.btn-ghost-sm.accent { color: var(--accent); border-color: var(--accent); }
+
+/* ── Table ── */
+.inv-table-wrap { max-height: 62vh; overflow: auto; }
+.inv-table { width: 100%; border-collapse: collapse; }
+.inv-table thead th {
+  position: sticky; top: 0; z-index: 5;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  white-space: nowrap;
+}
+.inv-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: .12s;
+}
+.inv-table tbody tr:last-child { border-bottom: none; }
+.inv-table tbody tr:hover { background: var(--bg3); }
+.inv-table tbody tr.row-low { background: rgba(212,149,74,.04); }
+.inv-table tbody tr.row-out { background: rgba(212,96,96,.04); }
+.inv-table tbody tr.row-low:hover { background: rgba(212,149,74,.08); }
+.inv-table tbody tr.row-out:hover { background: rgba(212,96,96,.08); }
+.inv-table td {
+  padding: 11px 14px;
+  font-size: 13px;
+  color: var(--text2);
+  vertical-align: middle;
+}
+
+.ing-name { font-weight: 600; color: var(--text); }
+.ing-unit { font-size: 11px; color: var(--muted); margin-top: 1px; font-family: var(--mono); }
+
+.stock-val { font-family: var(--mono); font-weight: 600; font-size: 13px; }
+
+.status-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 999px;
+  font-size: 11px; font-weight: 600;
+}
+.pill-ok   { background: rgba(93,184,138,.12); color: var(--success); border: 1px solid rgba(93,184,138,.2); }
+.pill-low  { background: rgba(212,149,74,.12);  color: var(--warn);    border: 1px solid rgba(212,149,74,.2); }
+.pill-out  { background: rgba(212,96,96,.12);   color: var(--danger);  border: 1px solid rgba(212,96,96,.2); }
+.pill-dot  { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+/* ── Update form ── */
+.update-form { display: flex; align-items: center; gap: 7px; justify-content: flex-end; }
+.stock-num-input {
+  width: 90px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 6px 8px;
+  outline: none;
+  transition: .15s;
+}
+.stock-num-input:focus { border-color: var(--accent); }
+.save-btn-sm {
+  padding: 6px 12px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--bg);
+  font-size: 11.5px;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  display: flex; align-items: center; gap: 5px;
+  transition: .15s;
+  white-space: nowrap;
+}
+.save-btn-sm:hover { background: var(--accent2); }
+.save-btn-sm:disabled { opacity: .5; cursor: not-allowed; }
+
+.row-feedback {
+  font-size: 11px;
+  font-weight: 600;
+  min-height: 14px;
+  text-align: right;
+  margin-top: 3px;
+  font-family: var(--mono);
+}
+.row-feedback.ok  { color: var(--success); }
+.row-feedback.err { color: var(--danger); }
+
+/* ── Footer ── */
+.inv-panel-footer {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg2);
+}
+.inv-counter { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+.inv-hint    { font-size: 11px; color: var(--muted); }
+.inv-hint kbd {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text2);
+}
+
+/* ── Empty state ── */
+.empty-inv {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--muted);
+}
+.empty-inv i { font-size: 24px; margin-bottom: 10px; display: block; color: var(--border2); }
+
+/* ── Mobile ── */
+@media (max-width: 820px) {
+  .inv-table thead { display: none; }
+  .inv-table tbody tr {
+    display: block;
+    background: var(--bg2) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-sm);
+    margin: 8px;
+    overflow: hidden;
+  }
+  .inv-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding: 9px 12px;
+  }
+  .inv-table tbody td:last-child { border-bottom: none; }
+  .inv-table tbody td::before {
+    content: attr(data-label);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+  .inv-stats { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="inv-page">
+
+  <!-- Header -->
+  <div class="inv-header">
+    <div class="inv-title-wrap">
+      <h1><i class="fas fa-boxes-stacked me-2" style="color:var(--accent)"></i>Inventory</h1>
+      <p>Real-time stock control — quick filters and instant updates</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div class="inv-filter-group" id="filterGroup">
+        <button class="inv-filter-btn active" data-filter="all">All</button>
+        <button class="inv-filter-btn" data-filter="low">Low Stock</button>
+        <button class="inv-filter-btn" data-filter="out">Out of Stock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="inv-stats">
+    <div class="stat-tile">
+      <div class="stat-icon-box all"><i class="fas fa-cubes"></i></div>
+      <div>
+        <div class="stat-tile-label">Total Ingredients</div>
+        <div class="stat-tile-value" id="statTotal">{{ ingredients|length }}</div>
+      </div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-icon-box low"><i class="fas fa-triangle-exclamation"></i></div>
+      <div>
+        <div class="stat-tile-label">Low Stock (≤20)</div>
+        <div class="stat-tile-value" id="statLow">{{ ingredients | selectattr('stock', 'le', 20) | list | length }}</div>
+      </div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-icon-box out"><i class="fas fa-circle-xmark"></i></div>
+      <div>
+        <div class="stat-tile-label">Out of Stock</div>
+        <div class="stat-tile-value" id="statOut">{{ ingredients | selectattr('stock', 'equalto', 0) | list | length }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel -->
+  <div class="inv-panel">
+    <div class="inv-panel-head">
+      <div class="search-bar">
+        <i class="fas fa-magnifying-glass"></i>
+        <input type="text" id="searchInv" placeholder="Search ingredient..." aria-label="Search ingredient">
+      </div>
+      <button class="btn-ghost-sm" id="resetBtn"><i class="fas fa-rotate-left"></i> Reset</button>
+      <button class="btn-ghost-sm accent" id="exportBtn"><i class="fas fa-file-csv"></i> Export CSV</button>
+    </div>
+
+    <div class="inv-table-wrap">
+      <table class="inv-table">
+        <thead>
+          <tr>
+            <th style="padding-left:18px">Ingredient</th>
+            <th>Stock</th>
+            <th>Status</th>
+            <th style="text-align:right;padding-right:18px">Update</th>
+          </tr>
+        </thead>
+        <tbody id="invBody" >
+          {% for i in ingredients %}
+          {% set is_out = i.stock == 0 %}
+          {% set is_low = i.stock <= 20 and i.stock > 0 %}
+          <tr class="{% if is_out %}row-out{% elif is_low %}row-low{% endif %}" data-stock="{{ i.stock }}">
+
+            <td style="padding-left:18px" data-label="Ingredient">
+              <div class="ing-name">{{ i.name }}</div>
+              <div class="ing-unit">{{ i.unit }}</div>
+            </td>
+
+            <td data-label="Stock">
+              <span class="stock-val">{{ i.stock }} {{ i.unit }}</span>
+            </td>
+
+            <td data-label="Status">
+              {% if is_out %}
+                <span class="status-pill pill-out"><span class="pill-dot"></span>Out</span>
+              {% elif is_low %}
+                <span class="status-pill pill-low"><span class="pill-dot"></span>Low</span>
+              {% else %}
+                <span class="status-pill pill-ok"><span class="pill-dot"></span>In Stock</span>
+              {% endif %}
+            </td>
+
+            <td style="padding-right:18px" data-label="Update">
+              <form class="inv-update-form" action="/inventory/update" method="POST">
+                <input type="hidden" name="ingredient_id" value="{{ i.id }}">
+                <div class="update-form">
+                  <input type="number" name="stock" class="stock-num-input" value="{{ i.stock }}" min="0" required>
+                  <button type="submit" class="save-btn-sm"><i class="fas fa-floppy-disk"></i> Save</button>
+                </div>
+                <div class="row-feedback" aria-live="polite"></div>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4">
+              <div class="empty-inv">
+                <i class="fas fa-box-open"></i>
+                No ingredients found.
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="inv-panel-footer">
+      <span class="inv-hint">Press <kbd>/</kbd> to search</span>
+      <span class="inv-counter" id="countText"></span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  var searchEl  = document.getElementById("searchInv");
+  var resetBtn  = document.getElementById("resetBtn");
+  var exportBtn = document.getElementById("exportBtn");
+  var countText = document.getElementById("countText");
+  var invBody   = document.getElementById("invBody");
+  var rows      = Array.from(invBody.querySelectorAll("tr[data-stock]"));
+  var filterGroup = document.getElementById("filterGroup");
+
+  var statTotal = document.getElementById("statTotal");
+  var statLow   = document.getElementById("statLow");
+  var statOut   = document.getElementById("statOut");
+
+  var activeFilter = "all";
+
+  function statusHtml(stock) {
+    if (stock === 0)  return '<span class="status-pill pill-out"><span class="pill-dot"></span>Out</span>';
+    if (stock <= 20)  return '<span class="status-pill pill-low"><span class="pill-dot"></span>Low</span>';
+    return '<span class="status-pill pill-ok"><span class="pill-dot"></span>In Stock</span>';
+  }
+
+  function updateRowClass(row, stock) {
+    row.classList.remove("row-low", "row-out");
+    if (stock === 0) row.classList.add("row-out");
+    else if (stock <= 20) row.classList.add("row-low");
+  }
+
+  function updateStats() {
+    var total = rows.length;
+    var out   = rows.filter(function(r) { return Number(r.dataset.stock) === 0; }).length;
+    var low   = rows.filter(function(r) { return Number(r.dataset.stock) <= 20; }).length;
+    statTotal.textContent = total;
+    statLow.textContent   = low;
+    statOut.textContent   = out;
+  }
+
+  function applyFilters() {
+    var q = (searchEl.value || "").trim().toLowerCase();
+    var visible = 0;
+    rows.forEach(function(row) {
+      var stock   = Number(row.dataset.stock || 0);
+      var name    = (row.querySelector("td")?.innerText || "").toLowerCase();
+      var filterOk =
+        activeFilter === "all" ? true :
+        activeFilter === "low" ? (stock > 0 && stock <= 20) :
+        activeFilter === "out" ? (stock === 0) : true;
+      var searchOk = name.includes(q);
+      var show = filterOk && searchOk;
+      row.style.display = show ? "" : "none";
+      if (show) visible++;
+    });
+    countText.textContent = visible + " item(s) shown";
+  }
+
+  filterGroup.addEventListener("click", function(e) {
+    var btn = e.target.closest("[data-filter]");
+    if (!btn) return;
+    activeFilter = btn.dataset.filter;
+    Array.from(filterGroup.querySelectorAll(".inv-filter-btn")).forEach(function(b) { b.classList.remove("active"); });
+    btn.classList.add("active");
+    applyFilters();
+  });
+
+  searchEl.addEventListener("input", applyFilters);
+
+  resetBtn.addEventListener("click", function() {
+    searchEl.value = "";
+    activeFilter = "all";
+    Array.from(filterGroup.querySelectorAll(".inv-filter-btn")).forEach(function(b) { b.classList.remove("active"); });
+    filterGroup.querySelector('[data-filter="all"]').classList.add("active");
+    applyFilters();
+    searchEl.focus();
+  });
+
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "/" && document.activeElement !== searchEl) {
+      e.preventDefault(); searchEl.focus();
+    }
+  });
+
+  exportBtn.addEventListener("click", function() {
+    var lines = [["Ingredient","Stock","Unit","Status"].join(",")];
+    rows.forEach(function(row) {
+      if (row.style.display === "none") return;
+      var nameEl = row.querySelector(".ing-name");
+      var unitEl = row.querySelector(".ing-unit");
+      var status = row.querySelector(".status-pill")?.innerText?.trim() || "";
+      var stock  = row.dataset.stock || "0";
+      var name   = nameEl ? nameEl.textContent.trim() : "";
+      var unit   = unitEl ? unitEl.textContent.trim() : "";
+      lines.push([name, stock, unit, status].map(function(v) { return '"' + String(v).replace(/"/g,'""') + '"'; }).join(","));
+    });
+    var blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement("a");
+    a.href = url; a.download = "inventory_export.csv"; a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // AJAX submit
+  invBody.addEventListener("submit", function(e) {
+    var form = e.target.closest(".inv-update-form");
+    if (!form) return;
+    e.preventDefault();
+
+    var row        = form.closest("tr[data-stock]");
+    var stockInput = form.querySelector('input[name="stock"]');
+    var idInput    = form.querySelector('input[name="ingredient_id"]');
+    var saveBtn    = form.querySelector(".save-btn-sm");
+    var feedback   = form.querySelector(".row-feedback");
+    var stockCell  = row?.querySelector("td:nth-child(2)");
+    var statusCell = row?.querySelector("td:nth-child(3)");
+    var unitText   = (row?.querySelector(".ing-unit")?.innerText || "").trim();
+
+    var nextStock = Number(stockInput?.value);
+    if (!Number.isInteger(nextStock) || nextStock < 0) {
+      feedback.className = "row-feedback err";
+      feedback.textContent = "Enter a valid non-negative number.";
+      return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving';
+    feedback.className = "row-feedback";
+    feedback.textContent = "";
+
+    var body = new URLSearchParams({ ingredient_id: idInput?.value || "", stock: String(nextStock) });
+    fetch("/inventory/update", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" }, body: body })
+      .then(function(res) { return res.json().catch(function() { return {}; }); })
+      .then(function(data) {
+        if (data.status !== "success") throw new Error(data.message || "Update failed.");
+        row.dataset.stock = String(nextStock);
+        if (stockCell) stockCell.querySelector(".stock-val").textContent = nextStock + " " + unitText;
+        if (statusCell) statusCell.innerHTML = statusHtml(nextStock);
+        updateRowClass(row, nextStock);
+        updateStats();
+        applyFilters();
+        feedback.className = "row-feedback ok";
+        feedback.textContent = "Updated ✓";
+      })
+      .catch(function(err) {
+        feedback.className = "row-feedback err";
+        feedback.textContent = err.message || "Failed.";
+      })
+      .finally(function() {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save';
+      });
+  });
+
+  updateStats();
+  applyFilters();
+})();
+</script>
+
+{% endblock %}

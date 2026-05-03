@@ -1,0 +1,583 @@
+{% extends "index.html" %}
+{% block title %}Order History | Kape Tubong{% endblock %}
+{% block content %}
+
+<style>
+.vo-page {
+  padding: 20px;
+  font-family: var(--font);
+}
+
+/* ── Header ── */
+.vo-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: rgba(15,14,12,.94);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px;
+  margin: -20px -20px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.vo-title-wrap h1 { font-size: 15px; font-weight: 700; color: var(--text); margin: 0; }
+.vo-title-wrap p  { font-size: 11px; color: var(--muted); margin: 2px 0 0; }
+
+.btn-csv {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 13px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--muted2);
+  font-size: 11.5px;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: .15s;
+}
+.btn-csv:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ── Summary tiles ── */
+.vo-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.vo-stat {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: .2s;
+}
+.vo-stat:hover { border-color: var(--border2); transform: translateY(-1px); }
+.vo-stat-icon {
+  width: 36px; height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+}
+.vo-stat-icon.orders  { background: rgba(212,169,106,.12); color: var(--accent); }
+.vo-stat-icon.revenue { background: rgba(93,184,138,.12);  color: var(--success); }
+.vo-stat-icon.visible { background: rgba(79,118,237,.12);  color: #6b8de8; }
+.vo-stat-lbl { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+.vo-stat-val { font-size: 1.45rem; font-weight: 700; line-height: 1; font-family: var(--mono); color: var(--text); }
+.vo-stat-val.money { color: var(--success); }
+
+/* ── Filter panel ── */
+.filter-panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.filter-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 140px 140px 110px 110px auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.search-bar {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 10px;
+  transition: .15s;
+}
+.search-bar:focus-within { border-color: var(--accent); }
+.search-bar i { color: var(--muted); font-size: 11px; flex-shrink: 0; }
+.search-bar input {
+  border: none; background: transparent; outline: none;
+  color: var(--text); font-family: var(--font); font-size: 12.5px;
+  padding: 8px 0; width: 100%;
+}
+.search-bar input::placeholder { color: var(--muted); }
+
+.flt-input {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 8px 10px;
+  width: 100%;
+  outline: none;
+  transition: .15s;
+}
+.flt-input:focus { border-color: var(--accent); }
+.flt-input::-webkit-calendar-picker-indicator { filter: invert(.6); }
+
+.btn-clear {
+  display: flex; align-items: center; gap: 5px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--muted2);
+  font-size: 11.5px;
+  font-family: var(--font);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: .15s;
+}
+.btn-clear:hover { color: var(--danger); border-color: var(--danger); }
+
+/* ── Quick range chips ── */
+.range-chips {
+  display: flex; gap: 5px; flex-wrap: wrap;
+}
+.rchip {
+  font-size: 11px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--muted2);
+  cursor: pointer;
+  font-family: var(--font);
+  font-weight: 500;
+  transition: .15s;
+}
+.rchip:hover { color: var(--text); border-color: var(--border2); }
+.rchip.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+/* ── Table card ── */
+.table-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.table-wrap { max-height: 64vh; overflow: auto; }
+
+/* custom scrollbar inside table */
+.table-wrap::-webkit-scrollbar { width: 5px; height: 5px; }
+.table-wrap::-webkit-scrollbar-track { background: transparent; }
+.table-wrap::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+.vo-table { width: 100%; border-collapse: collapse; }
+.vo-table thead th {
+  position: sticky; top: 0; z-index: 5;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  white-space: nowrap;
+  user-select: none;
+}
+.vo-table thead th.sortable { cursor: pointer; }
+.vo-table thead th.sortable:hover { color: var(--text2); }
+.sort-icon { margin-left: 5px; font-size: 10px; opacity: .5; }
+
+.vo-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: .1s;
+}
+.vo-table tbody tr:last-child { border-bottom: none; }
+.vo-table tbody tr:hover { background: var(--bg3); }
+.vo-table td {
+  padding: 11px 14px;
+  font-size: 13px;
+  color: var(--text2);
+  vertical-align: middle;
+}
+
+.td-customer { font-weight: 600; color: var(--text); }
+.td-product  { color: var(--text2); }
+.td-date     { font-size: 11.5px; color: var(--muted); font-family: var(--mono); }
+
+.pill-qty {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 28px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--mono);
+  background: rgba(212,169,106,.12);
+  color: var(--accent);
+  border: 1px solid rgba(212,169,106,.2);
+}
+.pill-money {
+  display: inline-flex; align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--mono);
+  background: rgba(93,184,138,.1);
+  color: var(--success);
+  border: 1px solid rgba(93,184,138,.2);
+}
+
+/* ── Empty state ── */
+.empty-vo {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--muted);
+}
+.empty-vo i { font-size: 24px; display: block; margin-bottom: 10px; color: var(--border2); }
+.empty-vo p { font-size: 13px; }
+
+/* ── Footer ── */
+.table-footer {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg2);
+}
+.footer-count { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+.footer-hint  { font-size: 11px; color: var(--muted); }
+.footer-hint kbd {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text2);
+}
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .filter-grid { grid-template-columns: 1fr 1fr 1fr; }
+}
+@media (max-width: 900px) {
+  .vo-stats    { grid-template-columns: 1fr; }
+  .filter-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  .vo-table thead { display: none; }
+  .vo-table tbody tr {
+    display: block;
+    background: var(--bg2);
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-sm);
+    margin: 8px;
+    overflow: hidden;
+  }
+  .vo-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding: 9px 12px;
+  }
+  .vo-table tbody td:last-child { border-bottom: none; }
+  .vo-table tbody td::before {
+    content: attr(data-label);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+}
+</style>
+
+<div class="vo-page">
+
+  <!-- Header -->
+  <div class="vo-header">
+    <div class="vo-title-wrap">
+      <h1><i class="fas fa-clipboard-list me-2" style="color:var(--accent)"></i>Order History</h1>
+      <p>Search, sort, and filter all transactions</p>
+    </div>
+    <button class="btn-csv" id="exportBtn"><i class="fas fa-file-csv"></i> Export CSV</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="vo-stats">
+    <div class="vo-stat">
+      <div class="vo-stat-icon orders"><i class="fas fa-receipt"></i></div>
+      <div>
+        <div class="vo-stat-lbl">Total Orders</div>
+        <div class="vo-stat-val" id="statTotal">{{ orders|length }}</div>
+      </div>
+    </div>
+    <div class="vo-stat">
+      <div class="vo-stat-icon revenue"><i class="fas fa-coins"></i></div>
+      <div>
+        <div class="vo-stat-lbl">Visible Revenue</div>
+        <div class="vo-stat-val money" id="statRevenue">₱{{ '%.2f'|format(total_revenue|float) }}</div>
+      </div>
+    </div>
+    <div class="vo-stat">
+      <div class="vo-stat-icon visible"><i class="fas fa-eye"></i></div>
+      <div>
+        <div class="vo-stat-lbl">Visible Orders</div>
+        <div class="vo-stat-val" id="statVisible">{{ orders|length }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-panel">
+    <div class="filter-grid">
+      <div class="search-bar">
+        <i class="fas fa-magnifying-glass"></i>
+        <input type="text" id="searchOrders" placeholder="Search customer or product..." aria-label="Search orders">
+      </div>
+      <input type="date" id="filterFrom" class="flt-input" aria-label="From date">
+      <input type="date" id="filterTo"   class="flt-input" aria-label="To date">
+      <input type="number" id="minSub" class="flt-input" min="0" step="0.01" placeholder="Min ₱">
+      <input type="number" id="maxSub" class="flt-input" min="0" step="0.01" placeholder="Max ₱">
+      <button class="btn-clear" id="clearBtn"><i class="fas fa-broom"></i> Clear</button>
+    </div>
+    <div class="range-chips" id="rangeChips">
+      <button class="rchip" data-range="today">Today</button>
+      <button class="rchip" data-range="7d">Last 7 Days</button>
+      <button class="rchip" data-range="month">This Month</button>
+      <button class="rchip active" data-range="all">All Time</button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-wrap">
+      <table class="vo-table" id="ordersTable">
+        <thead>
+          <tr>
+            <th class="sortable" data-col="customer" style="padding-left:18px">Customer <i class="fas fa-sort sort-icon"></i></th>
+            <th class="sortable" data-col="product">Product <i class="fas fa-sort sort-icon"></i></th>
+            <th class="sortable" data-col="qty" style="text-align:center">Qty <i class="fas fa-sort sort-icon"></i></th>
+            <th class="sortable" data-col="subtotal" style="text-align:center">Subtotal <i class="fas fa-sort sort-icon"></i></th>
+            <th class="sortable" data-col="date">Order Date <i class="fas fa-sort sort-icon"></i></th>
+          </tr>
+        </thead>
+        <tbody id="ordersTbody">
+          {% for o in orders %}
+          <tr
+            data-customer="{{ (o.customer_name or '')|lower }}"
+            data-product="{{ (o.product_name or '')|lower }}"
+            data-qty="{{ o.quantity }}"
+            data-subtotal="{{ o.subtotal|float }}"
+            data-date="{{ o.created_at.strftime('%Y-%m-%d') }}"
+            data-datetime="{{ o.created_at.strftime('%Y-%m-%d %H:%M:%S') }}"
+          >
+            <td class="td-customer" data-label="Customer" style="padding-left:18px">{{ o.customer_name }}</td>
+            <td class="td-product"  data-label="Product">{{ o.product_name }}</td>
+            <td data-label="Qty" style="text-align:center"><span class="pill-qty">{{ o.quantity }}</span></td>
+            <td data-label="Subtotal" style="text-align:center"><span class="pill-money">₱{{ '%.2f'|format(o.subtotal|float) }}</span></td>
+            <td class="td-date" data-label="Date">{{ o.created_at.strftime('%b %d, %Y · %I:%M %p') }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5">
+            <div class="empty-vo">
+              <i class="fas fa-inbox"></i>
+              <p>No orders found.</p>
+            </div>
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="table-footer">
+      <span class="footer-hint">Press <kbd>/</kbd> to search</span>
+      <span class="footer-count" id="countText"></span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  var searchInput = document.getElementById("searchOrders");
+  var fromInput   = document.getElementById("filterFrom");
+  var toInput     = document.getElementById("filterTo");
+  var minInput    = document.getElementById("minSub");
+  var maxInput    = document.getElementById("maxSub");
+  var clearBtn    = document.getElementById("clearBtn");
+  var exportBtn   = document.getElementById("exportBtn");
+  var countText   = document.getElementById("countText");
+  var statRevenue = document.getElementById("statRevenue");
+  var statVisible = document.getElementById("statVisible");
+
+  var tbody         = document.getElementById("ordersTbody");
+  var headerThs     = Array.from(document.querySelectorAll(".vo-table th.sortable"));
+  var rangeChipsEl  = Array.from(document.querySelectorAll("#rangeChips .rchip"));
+  var rows          = Array.from(tbody.querySelectorAll("tr[data-customer]"));
+  var currentSort   = { col: null, dir: "asc" };
+
+  function inRange(dateStr, from, to) {
+    if (!dateStr) return false;
+    var d = new Date(dateStr + "T00:00:00");
+    if (from && d < new Date(from + "T00:00:00")) return false;
+    if (to   && d > new Date(to   + "T23:59:59")) return false;
+    return true;
+  }
+
+  function applyFilters() {
+    var q   = (searchInput.value || "").trim().toLowerCase();
+    var from = fromInput.value || "";
+    var to   = toInput.value   || "";
+    var minV = minInput.value === "" ? null : Number(minInput.value);
+    var maxV = maxInput.value === "" ? null : Number(maxInput.value);
+    var revenue = 0;
+    var visible = 0;
+
+    rows.forEach(function(row) {
+      var cust = row.dataset.customer || "";
+      var prod = row.dataset.product  || "";
+      var sub  = Number(row.dataset.subtotal || 0);
+      var date = row.dataset.date || "";
+
+      var show =
+        (cust.includes(q) || prod.includes(q)) &&
+        (!from || !to || inRange(date, from, to)) &&
+        (minV === null || sub >= minV) &&
+        (maxV === null || sub <= maxV);
+
+      row.style.display = show ? "" : "none";
+      if (show) { revenue += sub; visible++; }
+    });
+
+    statRevenue.textContent = "₱" + revenue.toFixed(2);
+    statVisible.textContent = visible;
+    countText.textContent   = visible + " order(s) shown";
+  }
+
+  function parseVal(row, col) {
+    if (col === "customer") return row.dataset.customer || "";
+    if (col === "product")  return row.dataset.product  || "";
+    if (col === "qty")      return Number(row.dataset.qty      || 0);
+    if (col === "subtotal") return Number(row.dataset.subtotal || 0);
+    if (col === "date")     return new Date(row.dataset.datetime || 0).getTime();
+    return "";
+  }
+
+  function updateSortIcons(activeCol, dir) {
+    headerThs.forEach(function(th) {
+      var icon = th.querySelector(".sort-icon");
+      icon.classList.remove("fa-sort-up", "fa-sort-down");
+      icon.classList.add("fa-sort");
+      if (th.dataset.col === activeCol) {
+        icon.classList.remove("fa-sort");
+        icon.classList.add(dir === "asc" ? "fa-sort-up" : "fa-sort-down");
+      }
+    });
+  }
+
+  function sortRows(col) {
+    var same = currentSort.col === col;
+    var dir  = same && currentSort.dir === "asc" ? "desc" : "asc";
+    currentSort = { col: col, dir: dir };
+    rows.sort(function(a, b) {
+      var va = parseVal(a, col), vb = parseVal(b, col);
+      if (va < vb) return dir === "asc" ? -1 :  1;
+      if (va > vb) return dir === "asc" ?  1 : -1;
+      return 0;
+    });
+    rows.forEach(function(r) { tbody.appendChild(r); });
+    updateSortIcons(col, dir);
+    applyFilters();
+  }
+
+  function setQuickRange(key) {
+    var now   = new Date();
+    var from  = "";
+    var to    = "";
+    if (key === "today") {
+      from = to = now.toISOString().slice(0, 10);
+    } else if (key === "7d") {
+      var start = new Date(now); start.setDate(start.getDate() - 6);
+      from = start.toISOString().slice(0, 10);
+      to   = now.toISOString().slice(0, 10);
+    } else if (key === "month") {
+      from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+      to   = now.toISOString().slice(0, 10);
+    }
+    fromInput.value = from;
+    toInput.value   = to;
+    rangeChipsEl.forEach(function(c) { c.classList.remove("active"); });
+    var chip = rangeChipsEl.find(function(c) { return c.dataset.range === key; });
+    if (chip) chip.classList.add("active");
+    applyFilters();
+  }
+
+  // Debounced filter on input
+  var debounce;
+  [searchInput, fromInput, toInput, minInput, maxInput].forEach(function(el) {
+    el.addEventListener("input", function() {
+      clearTimeout(debounce);
+      debounce = setTimeout(applyFilters, 150);
+    });
+  });
+
+  clearBtn.addEventListener("click", function() {
+    searchInput.value = "";
+    fromInput.value   = "";
+    toInput.value     = "";
+    minInput.value    = "";
+    maxInput.value    = "";
+    rangeChipsEl.forEach(function(c) { c.classList.remove("active"); });
+    var all = rangeChipsEl.find(function(c) { return c.dataset.range === "all"; });
+    if (all) all.classList.add("active");
+    applyFilters();
+  });
+
+  document.getElementById("rangeChips").addEventListener("click", function(e) {
+    var chip = e.target.closest(".rchip");
+    if (!chip) return;
+    var key = chip.dataset.range;
+    if (key === "all") {
+      fromInput.value = ""; toInput.value = "";
+      rangeChipsEl.forEach(function(c) { c.classList.remove("active"); });
+      chip.classList.add("active");
+      applyFilters();
+      return;
+    }
+    setQuickRange(key);
+  });
+
+  headerThs.forEach(function(th) {
+    th.addEventListener("click", function() { sortRows(th.dataset.col); });
+  });
+
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "/" && document.activeElement !== searchInput) {
+      e.preventDefault(); searchInput.focus();
+    }
+  });
+
+  exportBtn.addEventListener("click", function() {
+    var lines = [["Customer","Product","Qty","Subtotal","Date"].join(",")];
+    rows.forEach(function(row) {
+      if (row.style.display === "none") return;
+      var cells = Array.from(row.children).map(function(td) {
+        return '"' + td.innerText.trim().replace(/"/g, '""') + '"';
+      });
+      lines.push(cells.join(","));
+    });
+    var blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement("a");
+    a.href = url; a.download = "orders_export.csv"; a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  applyFilters();
+})();
+</script>
+
+{% endblock %}

@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Kape Tubong{% endblock %}</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+
+  {% block head_extra %}{% endblock %}
+
+  <style>
+  /* ════════════════════════════════════════════════
+     TOKENS
+  ════════════════════════════════════════════════ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:          #0f0e0c;
+    --bg2:         #141210;
+    --bg3:         #1a1714;
+    --bg4:         #201d19;
+    --bg5:         #262219;
+    --border:      #272320;
+    --border2:     #332e27;
+    --border3:     #3e3830;
+    --text:        #f2ece4;
+    --text2:       #ccc3b6;
+    --muted:       #7a6f62;
+    --muted2:      #9e9082;
+    --accent:      #c9a05a;
+    --accent2:     #e0c080;
+    --accent3:     #f0d49a;
+    --accent-bg:   #1c1810;
+    --accent-glow: rgba(201,160,90,.12);
+    --success:     #52ad7e;
+    --success-bg:  rgba(82,173,126,.1);
+    --warn:        #c98940;
+    --warn-bg:     rgba(201,137,64,.1);
+    --danger:      #c85050;
+    --danger-bg:   rgba(200,80,80,.1);
+    --info-bg:     rgba(201,160,90,.08);
+    --tip-bg:      rgba(100,130,220,.1);
+    --tip:         #7090e0;
+    --sidebar-w:   230px;
+    --font:        'DM Sans', system-ui, sans-serif;
+    --mono:        'DM Mono', 'Courier New', monospace;
+    --r:           10px;
+    --r-sm:        7px;
+    --r-lg:        14px;
+    --ease:        cubic-bezier(.4,0,.2,1);
+  }
+
+  html, body {
+    height: 100%;
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ════════════════════════════════════════════════
+     LAYOUT
+  ════════════════════════════════════════════════ */
+  .app-shell {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  .content {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    min-width: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    transition: margin-left .25s var(--ease);
+  }
+
+  /* ════════════════════════════════════════════════
+     SIDEBAR
+  ════════════════════════════════════════════════ */
+  .sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    z-index: 200;
+    transition: transform .28s var(--ease), box-shadow .28s var(--ease);
+    overflow: hidden;
+  }
+
+  /* ── Brand ── */
+  .sb-brand {
+    padding: 16px 14px 13px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .sb-brand::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 14px; right: 14px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: .3;
+  }
+  .sb-logo {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; color: #0f0e0c;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 1px rgba(201,160,90,.3), 0 4px 12px rgba(201,160,90,.2);
+  }
+  .sb-brand-text { min-width: 0; }
+  .sb-brand-text strong {
+    display: block; font-size: 14px; font-weight: 700;
+    color: var(--text); letter-spacing: -.02em;
+    white-space: nowrap;
+  }
+  .sb-brand-text span {
+    font-size: 9.5px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .1em;
+  }
+
+  /* ── Nav area ── */
+  .sb-nav {
+    flex: 1;
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+  }
+  .sb-nav::-webkit-scrollbar { display: none; }
+
+  /* ── Section labels ── */
+  .sb-label {
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--muted);
+    padding: 10px 10px 4px;
+    margin-top: 2px;
+    font-weight: 600;
+  }
+
+  /* ── Nav links ── */
+  .sb-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--r-sm);
+    color: var(--muted2);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background .15s, color .15s, transform .15s;
+    position: relative;
+    cursor: pointer;
+    border: 1px solid transparent;
+    user-select: none;
+  }
+  .sb-link .sb-icon {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: var(--r-sm);
+    font-size: 12px;
+    flex-shrink: 0;
+    transition: background .15s, color .15s;
+    background: transparent;
+  }
+  .sb-link .sb-text { flex: 1; min-width: 0; white-space: nowrap; }
+
+  /* hover */
+  .sb-link:hover {
+    background: var(--bg3);
+    color: var(--text);
+    transform: translateX(2px);
+  }
+  .sb-link:hover .sb-icon {
+    background: var(--bg4);
+    color: var(--text2);
+  }
+
+  /* active */
+  .sb-link.active {
+    background: var(--accent-bg);
+    color: var(--accent2);
+    border-color: var(--border2);
+  }
+  .sb-link.active .sb-icon {
+    background: rgba(201,160,90,.15);
+    color: var(--accent);
+  }
+  .sb-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 3px;
+    background: linear-gradient(180deg, var(--accent), var(--accent2));
+    border-radius: 0 3px 3px 0;
+  }
+
+  /* ── Divider ── */
+  .sb-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 6px 10px;
+  }
+
+  /* ── Notification trigger ── */
+  .notif-trigger {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: var(--r-sm);
+    color: var(--muted2); font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: background .15s, color .15s, transform .15s;
+    position: relative; user-select: none;
+    border: 1px solid transparent;
+  }
+  .notif-trigger .sb-icon {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: var(--r-sm); font-size: 12px; flex-shrink: 0;
+    background: transparent; transition: background .15s, color .15s;
+  }
+  .notif-trigger:hover {
+    background: var(--bg3); color: var(--text); transform: translateX(2px);
+  }
+  .notif-trigger:hover .sb-icon { background: var(--bg4); }
+
+  /* badge */
+  .nb {
+    position: absolute; top: 5px; left: 26px;
+    min-width: 15px; height: 15px;
+    background: var(--danger);
+    color: #fff; border-radius: 999px;
+    font-size: 8.5px; font-weight: 700; font-family: var(--mono);
+    display: none; align-items: center; justify-content: center;
+    padding: 0 3px;
+    border: 2px solid var(--bg2);
+    animation: badge-pop .25s var(--ease);
+  }
+  .nb.on { display: flex; }
+  @keyframes badge-pop {
+    0%   { transform: scale(0); }
+    70%  { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+
+  /* ── Footer / user ── */
+  .sb-footer {
+    padding: 10px 12px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .sb-user {
+    display: flex; align-items: center; gap: 9px;
+    padding: 6px 4px; border-radius: var(--r-sm);
+    transition: background .15s; cursor: default;
+  }
+  .sb-user:hover { background: var(--bg3); }
+  .sb-avatar {
+    width: 30px; height: 30px;
+    background: var(--accent-bg);
+    border: 1.5px solid var(--border2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: var(--accent);
+    flex-shrink: 0; letter-spacing: 0;
+  }
+  .sb-user-info small  { display: block; font-size: 9.5px; color: var(--muted); letter-spacing: .02em; }
+  .sb-user-info strong { display: block; font-size: 12px; color: var(--text2); font-weight: 600; }
+
+  /* ════════════════════════════════════════════════
+     NOTIFICATION PANEL
+  ════════════════════════════════════════════════ */
+  .notif-panel {
+    position: fixed;
+    left: calc(var(--sidebar-w) + 10px);
+    width: 330px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--r-lg);
+    box-shadow: 0 20px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(201,160,90,.05);
+    z-index: 1000;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    max-height: 500px;
+
+    /* Animation */
+    opacity: 0;
+    transform: translateX(-8px) scale(.97);
+    pointer-events: none;
+    transition: opacity .2s var(--ease), transform .2s var(--ease);
+  }
+  .notif-panel.open {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    pointer-events: all;
+  }
+
+  /* Panel header */
+  .np-head {
+    padding: 13px 14px 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    gap: 8px; flex-shrink: 0;
+  }
+  .np-head-icon {
+    width: 28px; height: 28px;
+    background: rgba(201,160,90,.12);
+    border-radius: var(--r-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: var(--accent);
+  }
+  .np-head-title {
+    flex: 1; font-size: 13px; font-weight: 700; color: var(--text);
+  }
+  .np-count-pill {
+    font-size: 10px; font-family: var(--mono);
+    padding: 2px 7px; border-radius: 999px;
+    background: var(--bg3); color: var(--muted2);
+    border: 1px solid var(--border);
+  }
+  .np-count-pill.urgent { background: var(--danger-bg); color: var(--danger); border-color: rgba(200,80,80,.25); }
+  .np-refresh {
+    width: 26px; height: 26px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--muted2); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; transition: .15s; flex-shrink: 0;
+  }
+  .np-refresh:hover { color: var(--accent); border-color: var(--accent); }
+  .np-refresh.spinning i { animation: spin .6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Filter tabs */
+  .np-tabs {
+    display: flex; gap: 4px; padding: 8px 14px 0;
+    flex-shrink: 0;
+  }
+  .np-tab {
+    font-size: 10.5px; padding: 4px 9px; border-radius: 6px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--muted2); cursor: pointer; font-family: var(--font);
+    transition: .15s;
+  }
+  .np-tab:hover { border-color: var(--border2); color: var(--text2); }
+  .np-tab.active { background: var(--accent-bg); color: var(--accent); border-color: var(--border2); }
+
+  /* List */
+  .np-list { overflow-y: auto; flex: 1; padding: 4px 0; }
+  .np-list::-webkit-scrollbar { width: 3px; }
+  .np-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* Items */
+  .np-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    cursor: default; transition: background .12s;
+    animation: item-in .2s var(--ease) both;
+  }
+  .np-item:last-child { border-bottom: none; }
+  .np-item:hover { background: var(--bg3); }
+  @keyframes item-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .np-icon {
+    width: 32px; height: 32px; border-radius: var(--r-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0; margin-top: 1px;
+  }
+  .np-icon.danger  { background: var(--danger-bg);  color: var(--danger); }
+  .np-icon.warn    { background: var(--warn-bg);    color: var(--warn); }
+  .np-icon.info    { background: var(--info-bg);    color: var(--accent); }
+  .np-icon.success { background: var(--success-bg); color: var(--success); }
+  .np-icon.tip     { background: var(--tip-bg);     color: var(--tip); }
+
+  .np-body { flex: 1; min-width: 0; }
+  .np-title {
+    font-size: 12px; font-weight: 600; color: var(--text);
+    line-height: 1.35; margin-bottom: 3px;
+  }
+  .np-msg { font-size: 11px; color: var(--muted2); line-height: 1.45; }
+  .np-time {
+    font-size: 9.5px; color: var(--muted); margin-top: 4px;
+    font-family: var(--mono); display: flex; align-items: center; gap: 4px;
+  }
+  .np-time::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: .5; }
+
+  /* States */
+  .np-empty {
+    text-align: center; padding: 36px 20px; color: var(--muted);
+  }
+  .np-empty .np-empty-icon {
+    width: 48px; height: 48px;
+    background: var(--success-bg);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: var(--success);
+    margin: 0 auto 12px;
+  }
+  .np-empty p { font-size: 12px; line-height: 1.5; }
+  .np-empty strong { color: var(--text2); display: block; margin-bottom: 4px; font-size: 13px; }
+
+  .np-loading {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 28px; color: var(--muted); font-size: 12px;
+  }
+  .np-spinner {
+    width: 16px; height: 16px; border: 2px solid var(--border2);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+
+  /* Footer */
+  .np-foot {
+    padding: 8px 14px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+    background: var(--bg3);
+  }
+  .np-foot-left  { font-size: 10px; color: var(--muted); font-family: var(--mono); }
+  .np-foot-right { font-size: 10px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+  .np-pulse { width: 5px; height: 5px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+  /* ════════════════════════════════════════════════
+     MOBILE TOPBAR
+  ════════════════════════════════════════════════ */
+  .mobile-bar {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 150;
+    box-shadow: 0 1px 0 var(--border);
+  }
+  .mobile-brand {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; font-weight: 700; color: var(--accent);
+  }
+  .mobile-brand .ml { width: 26px; height: 26px; background: linear-gradient(135deg,var(--accent),var(--accent2)); border-radius: 7px; display:flex;align-items:center;justify-content:center; font-size:12px;color:#0f0e0c; }
+  .mobile-actions { display: flex; gap: 6px; align-items: center; }
+  .mobile-btn {
+    width: 32px; height: 32px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted2); cursor: pointer; font-size: 13px;
+    transition: .15s; position: relative;
+  }
+  .mobile-btn:hover { color: var(--text); border-color: var(--border2); }
+
+  /* ════════════════════════════════════════════════
+     FLASH MESSAGES
+  ════════════════════════════════════════════════ */
+  .flash-wrap { padding: 12px 18px 0; }
+  .flash-msg {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+    padding: 10px 13px; border-radius: var(--r-sm);
+    font-size: 12.5px; margin-bottom: 8px;
+    animation: flash-in .25s var(--ease);
+  }
+  @keyframes flash-in { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:none} }
+  .flash-msg .flash-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+  .flash-msg .flash-text { flex: 1; line-height: 1.4; }
+  .flash-close {
+    background: none; border: none; cursor: pointer;
+    color: inherit; opacity: .5; font-size: 11px; padding: 0; flex-shrink: 0;
+    transition: opacity .15s;
+  }
+  .flash-close:hover { opacity: 1; }
+  .flash-success { background: var(--success-bg); border: 1px solid rgba(82,173,126,.25); color: var(--success); }
+  .flash-danger  { background: var(--danger-bg);  border: 1px solid rgba(200,80,80,.25);  color: var(--danger); }
+  .flash-warning { background: var(--warn-bg);    border: 1px solid rgba(201,137,64,.25); color: var(--warn); }
+  .flash-info    { background: var(--info-bg);    border: 1px solid rgba(201,160,90,.2);  color: var(--accent2); }
+
+  /* ════════════════════════════════════════════════
+     OVERLAY
+  ════════════════════════════════════════════════ */
+  .sb-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.55); z-index: 199;
+    backdrop-filter: blur(2px);
+    transition: opacity .25s;
+  }
+  .sb-overlay.on { display: block; }
+
+  /* ════════════════════════════════════════════════
+     SCROLLBAR (global)
+  ════════════════════════════════════════════════ */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  /* ════════════════════════════════════════════════
+     RESPONSIVE
+  ════════════════════════════════════════════════ */
+  @media (max-width: 991px) {
+    .sidebar {
+      transform: translateX(-100%);
+      box-shadow: none;
+    }
+    .sidebar.open {
+      transform: translateX(0);
+      box-shadow: 8px 0 32px rgba(0,0,0,.5);
+    }
+    .content { margin-left: 0; }
+    .mobile-bar { display: flex; }
+    .notif-panel { left: 8px; right: 8px; width: auto; }
+  }
+  </style>
+</head>
+<body>
+
+<!-- Overlay -->
+<div class="sb-overlay" id="sbOverlay"></div>
+
+<!-- Notification panel (outside sidebar so it overlays content) -->
+<div class="notif-panel" id="notifPanel">
+  <div class="np-head">
+    <div class="np-head-icon"><i class="fas fa-bell"></i></div>
+    <div class="np-head-title">Notifications</div>
+    <span class="np-count-pill" id="npCountPill">—</span>
+    <button class="np-refresh" id="npRefresh" title="Refresh"><i class="fas fa-rotate" id="npRefreshIcon"></i></button>
+  </div>
+
+  <div class="np-tabs" id="npTabs">
+    <button class="np-tab active" data-filter="all">All</button>
+    <button class="np-tab" data-filter="danger">Critical</button>
+    <button class="np-tab" data-filter="warn">Warnings</button>
+    <button class="np-tab" data-filter="success tip">Insights</button>
+  </div>
+
+  <div class="np-list" id="npList">
+    <div class="np-loading"><div class="np-spinner"></div> Loading…</div>
+  </div>
+
+  <div class="np-foot">
+    <span class="np-foot-left" id="npFootText">Fetching data…</span>
+    <span class="np-foot-right"><span class="np-pulse"></span> Refreshes every 60s</span>
+  </div>
+</div>
+
+<div class="app-shell">
+
+  {% if session.get('loggedin') %}
+  <nav class="sidebar" id="sidebar" aria-label="Sidebar navigation">
+
+    <!-- Brand -->
+    <div class="sb-brand">
+      <div class="sb-logo"><i class="fas fa-mug-hot"></i></div>
+      <div class="sb-brand-text">
+        <strong>Kape Tubong</strong>
+        <span>Point of Sale</span>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <div class="sb-nav">
+
+      <div class="sb-label">Overview</div>
+      <a href="{{ url_for('dashboard') }}"
+         class="sb-link {% if request.path == url_for('dashboard') %}active{% endif %}">
+        <span class="sb-icon"><i class="fas fa-chart-line"></i></span>
+        <span class="sb-text">Analytics</span>
+      </a>
+
+      <div class="sb-label">Operations</div>
+      <a href="{{ url_for('orders') }}"
+         class="sb-link {% if request.path == url_for('orders') %}active{% endif %}">
+        <span class="sb-icon"><i class="fas fa-cart-plus"></i></span>
+        <span class="sb-text">New Order</span>
+      </a>
+      <a href="{{ url_for('view_orders') }}"
+         class="sb-link {% if request.path == url_for('view_orders') %}active{% endif %}">
+        <span class="sb-icon"><i class="fas fa-clipboard-list"></i></span>
+        <span class="sb-text">Order History</span>
+      </a>
+      <a href="{{ url_for('inventory') }}"
+         class="sb-link {% if request.path == url_for('inventory') %}active{% endif %}">
+        <span class="sb-icon"><i class="fas fa-boxes-stacked"></i></span>
+        <span class="sb-text">Inventory</span>
+      </a>
+
+      <div class="sb-label">Catalogue</div>
+      <a href="{{ url_for('products') }}"
+         class="sb-link {% if '/products' in request.path or '/edit-product' in request.path or '/add-product' in request.path %}active{% endif %}">
+        <span class="sb-icon"><i class="fas fa-box-open"></i></span>
+        <span class="sb-text">Products</span>
+      </a>
+      <a href="{{ url_for('add_ingredient') }}"
+         class="sb-link {% if '/add-ingredient' in request.path %}active{% endif %}">
+        <span class="sb-icon"><i class="fas fa-seedling"></i></span>
+        <span class="sb-text">Ingredients</span>
+      </a>
+
+      <div class="sb-divider"></div>
+
+      <!-- Notification bell -->
+      <div class="notif-trigger" id="notifTrigger">
+        <span class="sb-icon"><i class="fas fa-bell"></i></span>
+        <span class="sb-text">Notifications</span>
+        <div class="nb" id="notifBadge"></div>
+      </div>
+
+      <a href="{{ url_for('logout') }}" class="sb-link">
+        <span class="sb-icon"><i class="fas fa-arrow-right-from-bracket"></i></span>
+        <span class="sb-text">Sign Out</span>
+      </a>
+
+    </div>
+
+    <!-- Footer / user -->
+    <div class="sb-footer">
+      <div class="sb-user">
+        <div class="sb-avatar">{{ session.get('username', '?')[0]|upper }}</div>
+        <div class="sb-user-info">
+          <small>Signed in as</small>
+          <strong>{{ session.get('username') }}</strong>
+        </div>
+        <i class="fas fa-circle" style="font-size:6px;color:var(--success);margin-left:auto" title="Online"></i>
+      </div>
+    </div>
+
+  </nav>
+  {% endif %}
+
+  <main class="content">
+
+    {% if session.get('loggedin') %}
+    <!-- Mobile topbar -->
+    <div class="mobile-bar">
+      <div class="mobile-brand">
+        <div class="ml"><i class="fas fa-mug-hot"></i></div>
+        Kape Tubong
+      </div>
+      <div class="mobile-actions">
+        <!-- Mobile notification bell -->
+        <div class="mobile-btn notif-trigger" id="notifTriggerMob">
+          <i class="fas fa-bell"></i>
+          <div class="nb" id="notifBadgeMob"></div>
+        </div>
+        <button class="mobile-btn" id="menuToggleBtn" aria-label="Open menu">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-wrap">
+      {% for category, message in messages %}
+      {% set icons = {'success': 'fa-circle-check', 'danger': 'fa-circle-exclamation', 'warning': 'fa-triangle-exclamation', 'info': 'fa-circle-info'} %}
+      <div class="flash-msg flash-{{ category if category in ['success','danger','warning','info'] else 'info' }}">
+        <i class="fas {{ icons.get(category, 'fa-circle-info') }} flash-icon"></i>
+        <span class="flash-text">{{ message }}</span>
+        <button class="flash-close" onclick="this.closest('.flash-msg').remove()" aria-label="Dismiss">
+          <i class="fas fa-xmark"></i>
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ── Sidebar ── */
+  var sidebar   = document.getElementById('sidebar');
+  var overlay   = document.getElementById('sbOverlay');
+  var menuBtn   = document.getElementById('menuToggleBtn');
+
+  function openSidebar() {
+    if (!sidebar) return;
+    sidebar.classList.add('open');
+    overlay.classList.add('on');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSidebar() {
+    if (!sidebar) return;
+    sidebar.classList.remove('open');
+    overlay.classList.remove('on');
+    document.body.style.overflow = '';
+  }
+  if (menuBtn)  menuBtn.addEventListener('click', function () { sidebar.classList.contains('open') ? closeSidebar() : openSidebar(); });
+  if (overlay)  overlay.addEventListener('click', closeSidebar);
+  window.addEventListener('resize', function () { if (window.innerWidth > 991) closeSidebar(); });
+
+  /* ── Auto-dismiss flash messages ── */
+  setTimeout(function () {
+    document.querySelectorAll('.flash-msg').forEach(function (el) {
+      el.style.transition = 'opacity .4s, transform .4s';
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(-6px)';
+      setTimeout(function () { el.remove(); }, 400);
+    });
+  }, 5000);
+
+  /* ══════════════════════════════════════════
+     NOTIFICATION SYSTEM
+  ══════════════════════════════════════════ */
+  var panel     = document.getElementById('notifPanel');
+  var npList    = document.getElementById('npList');
+  var npTabs    = document.getElementById('npTabs');
+  var npRefresh = document.getElementById('npRefresh');
+  var npRefreshIcon = document.getElementById('npRefreshIcon');
+  var npCountPill   = document.getElementById('npCountPill');
+  var npFootText    = document.getElementById('npFootText');
+  var badge     = document.getElementById('notifBadge');
+  var badgeMob  = document.getElementById('notifBadgeMob');
+  var trigger   = document.getElementById('notifTrigger');
+  var triggerMob = document.getElementById('notifTriggerMob');
+
+  var isOpen     = false;
+  var activeFilter = 'all';
+  var cachedItems  = [];
+
+  var iconMap = {
+    danger:  { cls: 'danger',  icon: 'fas fa-circle-exclamation' },
+    warn:    { cls: 'warn',    icon: 'fas fa-triangle-exclamation' },
+    info:    { cls: 'info',    icon: 'fas fa-circle-info' },
+    success: { cls: 'success', icon: 'fas fa-circle-check' },
+    tip:     { cls: 'tip',     icon: 'fas fa-lightbulb' }
+  };
+
+  /* Position panel next to the sidebar trigger */
+  function positionPanel() {
+    if (!trigger || !panel) return;
+    var rect = trigger.getBoundingClientRect();
+    var top  = Math.min(rect.top, window.innerHeight - 520);
+    panel.style.top = Math.max(8, top) + 'px';
+  }
+
+  function openPanel() {
+    positionPanel();
+    panel.classList.add('open');
+    isOpen = true;
+    if (!cachedItems.length) fetchNotifications();
+    else renderList(cachedItems);
+  }
+  function closePanel() {
+    panel.classList.remove('open');
+    isOpen = false;
+  }
+  function togglePanel() { isOpen ? closePanel() : openPanel(); }
+
+  if (trigger)    trigger.addEventListener('click',    function (e) { e.stopPropagation(); togglePanel(); });
+  if (triggerMob) triggerMob.addEventListener('click', function (e) { e.stopPropagation(); togglePanel(); });
+
+  document.addEventListener('click', function (e) {
+    if (isOpen && panel && !panel.contains(e.target)) closePanel();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && isOpen) closePanel();
+  });
+
+  /* Refresh button */
+  if (npRefresh) {
+    npRefresh.addEventListener('click', function () {
+      npRefresh.classList.add('spinning');
+      fetchNotifications(function () { npRefresh.classList.remove('spinning'); });
+    });
+  }
+
+  /* Filter tabs */
+  if (npTabs) {
+    npTabs.addEventListener('click', function (e) {
+      var btn = e.target.closest('.np-tab');
+      if (!btn) return;
+      document.querySelectorAll('.np-tab').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      activeFilter = btn.dataset.filter;
+      renderList(cachedItems);
+    });
+  }
+
+  /* Set badge */
+  function setBadge(count) {
+    [badge, badgeMob].forEach(function (b) {
+      if (!b) return;
+      if (count > 0) {
+        b.textContent = count > 9 ? '9+' : String(count);
+        b.classList.add('on');
+      } else {
+        b.classList.remove('on');
+      }
+    });
+  }
+
+  /* Render notification list with current filter */
+  function renderList(items) {
+    var filters = activeFilter.split(' ');
+    var filtered = activeFilter === 'all' ? items : items.filter(function (n) {
+      return filters.indexOf(n.level) !== -1;
+    });
+
+    if (!filtered.length) {
+      if (activeFilter !== 'all') {
+        npList.innerHTML =
+          '<div class="np-empty">' +
+          '<div class="np-empty-icon"><i class="fas fa-check"></i></div>' +
+          '<strong>All clear here</strong>' +
+          '<p>No notifications in this category.</p>' +
+          '</div>';
+      } else {
+        npList.innerHTML =
+          '<div class="np-empty">' +
+          '<div class="np-empty-icon"><i class="fas fa-check"></i></div>' +
+          '<strong>Everything looks good!</strong>' +
+          '<p>No alerts right now. Check back later.</p>' +
+          '</div>';
+      }
+      return;
+    }
+
+    npList.innerHTML = filtered.map(function (n, idx) {
+      var ic = iconMap[n.level] || iconMap.info;
+      return '<div class="np-item" style="animation-delay:' + (idx * 35) + 'ms">' +
+        '<div class="np-icon ' + ic.cls + '"><i class="' + ic.icon + '"></i></div>' +
+        '<div class="np-body">' +
+          '<div class="np-title np-t-' + idx + '"></div>' +
+          '<div class="np-msg np-m-' + idx + '"></div>' +
+          (n.time ? '<div class="np-time np-time-' + idx + '"></div>' : '') +
+        '</div>' +
+        '</div>';
+    }).join('');
+
+    filtered.forEach(function (n, idx) {
+      var t = npList.querySelector('.np-t-' + idx);
+      var m = npList.querySelector('.np-m-' + idx);
+      var tm = npList.querySelector('.np-time-' + idx);
+      if (t)  t.textContent  = n.title;
+      if (m)  m.textContent  = n.message;
+      if (tm) tm.textContent = n.time;
+    });
+  }
+
+  /* Fetch from /notifications */
+  function fetchNotifications(onDone) {
+    npList.innerHTML = '<div class="np-loading"><div class="np-spinner"></div> Checking everything…</div>';
+
+    fetch('/notifications')
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        cachedItems = data.notifications || [];
+
+        var urgent = cachedItems.filter(function (n) { return n.level === 'danger' || n.level === 'warn'; }).length;
+        setBadge(urgent);
+
+        var total = cachedItems.length;
+        npFootText.textContent = 'Updated just now · ' + total + ' total';
+
+        npCountPill.textContent = urgent > 0 ? urgent + ' urgent' : total + ' items';
+        npCountPill.className   = 'np-count-pill' + (urgent > 0 ? ' urgent' : '');
+
+        renderList(cachedItems);
+        if (onDone) onDone();
+      })
+      .catch(function () {
+        npList.innerHTML =
+          '<div class="np-empty">' +
+          '<div class="np-empty-icon" style="background:var(--danger-bg)"><i class="fas fa-wifi" style="color:var(--danger)"></i></div>' +
+          '<strong>Connection error</strong>' +
+          '<p>Could not reach the server. Try again.</p>' +
+          '</div>';
+        if (onDone) onDone();
+      });
+  }
+
+  /* Silent background poll */
+  function silentPoll() {
+    fetch('/notifications')
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        cachedItems = data.notifications || [];
+        var urgent  = cachedItems.filter(function (n) { return n.level === 'danger' || n.level === 'warn'; }).length;
+        setBadge(urgent);
+        npCountPill.textContent = urgent > 0 ? urgent + ' urgent' : cachedItems.length + ' items';
+        npCountPill.className   = 'np-count-pill' + (urgent > 0 ? ' urgent' : '');
+        npFootText.textContent  = 'Updated just now · ' + cachedItems.length + ' total';
+        if (isOpen) renderList(cachedItems);
+      })
+      .catch(function () {});
+  }
+
+  if (trigger || triggerMob) {
+    silentPoll();
+    setInterval(silentPoll, 60000);
+  }
+
+})();
+</script>
+
+{% block body_extra %}{% endblock %}
+</body>
+</html>

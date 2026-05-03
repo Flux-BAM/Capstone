@@ -1,0 +1,402 @@
+{% extends "index.html" %}
+{% block title %}Add Product | Kape Tubong{% endblock %}
+{% block content %}
+
+<style>
+.ap-page { padding: 20px; font-family: var(--font); }
+
+/* ── Header ── */
+.ap-header {
+  position: sticky; top: 0; z-index: 30;
+  background: rgba(15,14,12,.94);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px;
+  margin: -20px -20px 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.ap-header h1 { font-size: 15px; font-weight: 700; color: var(--text); margin: 0; }
+.ap-header p  { font-size: 11px; color: var(--muted); margin: 2px 0 0; }
+
+.back-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--bg3);
+  color: var(--muted2); font-size: 11.5px; font-family: var(--font);
+  cursor: pointer; text-decoration: none; transition: .15s;
+}
+.back-btn:hover { color: var(--text); border-color: var(--border2); }
+
+/* ── Layout ── */
+.ap-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 16px;
+  align-items: start;
+}
+
+/* ── Card ── */
+.ap-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.ap-card-head {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px; font-weight: 600; color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+}
+.ap-card-head i { color: var(--accent); font-size: 12px; }
+.ap-card-body { padding: 18px; }
+
+/* ── Fields ── */
+.field { margin-bottom: 16px; }
+.field:last-child { margin-bottom: 0; }
+.field-label {
+  display: block; font-size: 11px; font-weight: 600;
+  color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px;
+}
+.field-input, .field-select {
+  width: 100%;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-family: var(--font); font-size: 13px; padding: 9px 12px;
+  outline: none; transition: border-color .15s;
+}
+.field-input:focus, .field-select:focus { border-color: var(--accent); }
+.field-input::placeholder { color: var(--muted); }
+.field-select option { background: var(--bg3); color: var(--text); }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* ── Image upload ── */
+.img-upload-zone {
+  border: 2px dashed var(--border2);
+  border-radius: var(--radius);
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: .2s;
+  background: var(--bg3);
+  position: relative;
+  overflow: hidden;
+}
+.img-upload-zone:hover, .img-upload-zone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+.img-upload-zone input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.img-upload-icon { font-size: 28px; color: var(--border2); margin-bottom: 8px; display: block; transition: .2s; }
+.img-upload-zone:hover .img-upload-icon { color: var(--accent); }
+.img-upload-text { font-size: 12px; color: var(--muted); }
+.img-upload-text strong { color: var(--accent2); }
+.img-preview {
+  width: 100%; height: 180px; object-fit: cover;
+  border-radius: var(--radius-sm); display: none; margin-bottom: 10px;
+}
+.img-preview.visible { display: block; }
+.img-change-hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+/* ── Recipe builder ── */
+.recipe-row {
+  display: grid;
+  grid-template-columns: 1fr 100px 36px;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.recipe-row:last-child { margin-bottom: 0; }
+
+.recipe-select, .recipe-qty {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-family: var(--font); font-size: 12.5px; padding: 8px 10px;
+  outline: none; transition: border-color .15s; width: 100%;
+}
+.recipe-select:focus, .recipe-qty:focus { border-color: var(--accent); }
+.recipe-select option { background: var(--bg3); }
+.recipe-qty::placeholder { color: var(--muted); }
+
+.remove-recipe-btn {
+  width: 34px; height: 34px;
+  background: rgba(212,96,96,.1); border: 1px solid rgba(212,96,96,.2);
+  border-radius: var(--radius-sm); color: var(--danger);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; transition: .15s; flex-shrink: 0;
+}
+.remove-recipe-btn:hover { background: rgba(212,96,96,.2); }
+
+.add-ingredient-row-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: var(--radius-sm);
+  border: 1px dashed var(--border2); background: transparent;
+  color: var(--muted2); font-size: 11.5px; font-family: var(--font);
+  cursor: pointer; transition: .15s; margin-top: 10px; width: 100%;
+  justify-content: center;
+}
+.add-ingredient-row-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.recipe-unit-hint {
+  font-size: 10px; color: var(--muted); margin-top: 2px; font-family: var(--mono);
+}
+
+/* ── Submit ── */
+.btn-submit {
+  width: 100%; padding: 12px;
+  background: var(--accent); border: none; border-radius: var(--radius-sm);
+  color: var(--bg); font-family: var(--font); font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: .15s; display: flex; align-items: center; justify-content: center; gap: 7px;
+}
+.btn-submit:hover { background: var(--accent2); }
+.btn-submit:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── Toast ── */
+#apToast {
+  position: fixed; right: 16px; bottom: 20px; z-index: 9999;
+  padding: 9px 14px; font-size: 11.5px; font-family: var(--mono);
+  background: var(--bg3); border: 1px solid var(--border2);
+  color: var(--accent2); border-radius: var(--radius-sm);
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+}
+.ap-note { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+
+@media (max-width: 900px) { .ap-grid { grid-template-columns: 1fr; } }
+</style>
+
+<div id="apToast"></div>
+
+<div class="ap-page">
+
+  <div class="ap-header">
+    <div>
+      <h1><i class="fas fa-box-open me-2" style="color:var(--accent)"></i>Add Product</h1>
+      <p>Create a new product and define its ingredient recipe</p>
+    </div>
+    <a href="{{ url_for('products') }}" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+  </div>
+
+  <form method="POST" action="/add-product" enctype="multipart/form-data" id="addProductForm">
+
+    <div class="ap-grid">
+
+      <!-- LEFT: Product details -->
+      <div style="display:flex;flex-direction:column;gap:16px">
+
+        <!-- Basic info -->
+        <div class="ap-card">
+          <div class="ap-card-head"><i class="fas fa-tag"></i> Product Details</div>
+          <div class="ap-card-body">
+
+            <div class="field">
+              <label class="field-label">Product Name</label>
+              <input class="field-input" type="text" name="name" placeholder="e.g. Milk Tea Classic" required>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label">Price (₱)</label>
+                <input class="field-input" type="number" name="price" min="0" step="0.01" placeholder="0.00" required>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Category</label>
+              <select class="field-select" name="category" required>
+                <option value="" disabled selected>Select category...</option>
+                <option value="icedcoffee">Iced Coffee</option>
+                <option value="icedlatte">Iced Latte</option>
+                <option value="milktea">Milk Tea</option>
+                <option value="creamyfloats">Creamy Floats</option>
+                <option value="summerfloats">Summer Floats</option>
+                <option value="lemonadetea">Lemonade & Tea</option>
+                <option value="matchaseries">Matcha Series</option>
+                <option value="hotcoffee">Hot Coffee</option>
+                <option value="snacks">Snacks</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Recipe -->
+        <div class="ap-card">
+          <div class="ap-card-head"><i class="fas fa-flask"></i> Recipe (Ingredients Used Per Order)</div>
+          <div class="ap-card-body">
+
+            <div style="display:grid;grid-template-columns:1fr 100px 36px;gap:8px;margin-bottom:8px">
+              <span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Ingredient</span>
+              <span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Qty used</span>
+              <span></span>
+            </div>
+
+            <div id="recipeRows"></div>
+
+            <button type="button" class="add-ingredient-row-btn" id="addRowBtn">
+              <i class="fas fa-plus"></i> Add Ingredient
+            </button>
+
+            <p class="ap-note">Each row = how much of that ingredient is deducted when 1 of this product is ordered. Leave empty if no recipe needed.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Image + submit -->
+      <div style="display:flex;flex-direction:column;gap:16px">
+
+        <!-- Image upload -->
+        <div class="ap-card">
+          <div class="ap-card-head"><i class="fas fa-image"></i> Product Image</div>
+          <div class="ap-card-body">
+            <img id="imgPreview" class="img-preview" src="" alt="Preview">
+            <div class="img-upload-zone" id="uploadZone">
+              <input type="file" name="image" accept="image/*" id="imageInput">
+              <i class="fas fa-cloud-arrow-up img-upload-icon"></i>
+              <div class="img-upload-text">
+                <strong>Click to upload</strong> or drag & drop<br>
+                JPG, PNG, WEBP — max 5 MB
+              </div>
+            </div>
+            <p class="img-change-hint" id="imgName" style="display:none"></p>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="ap-card">
+          <div class="ap-card-body">
+            <button type="submit" class="btn-submit" id="submitBtn">
+              <i class="fas fa-plus-circle"></i> Create Product
+            </button>
+            <p class="ap-note" style="text-align:center;margin-top:10px">
+              Product will appear immediately in the Order page after saving.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Pass ingredients as JSON for the recipe builder -->
+<script id="ingredientsData" type="application/json">
+{{ ingredients | tojson }}
+</script>
+
+<script>
+(function () {
+  var ingredients = JSON.parse(document.getElementById("ingredientsData").textContent);
+
+  function toast(msg, type) {
+    var t = document.getElementById("apToast");
+    t.textContent = msg;
+    t.style.borderColor = type === "err" ? "rgba(212,96,96,.4)" : "rgba(93,184,138,.4)";
+    t.style.color = type === "err" ? "var(--danger)" : "var(--success)";
+    t.style.opacity = "1";
+    clearTimeout(t._t);
+    t._t = setTimeout(function () { t.style.opacity = "0"; }, 2500);
+  }
+
+  // ── Image preview ──
+  var imageInput  = document.getElementById("imageInput");
+  var imgPreview  = document.getElementById("imgPreview");
+  var uploadZone  = document.getElementById("uploadZone");
+  var imgName     = document.getElementById("imgName");
+
+  imageInput.addEventListener("change", function () {
+    var file = imageInput.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast("Image too large (max 5 MB)", "err"); imageInput.value = ""; return; }
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      imgPreview.src = e.target.result;
+      imgPreview.classList.add("visible");
+      imgName.textContent = file.name;
+      imgName.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // drag-over style
+  uploadZone.addEventListener("dragover", function (e) { e.preventDefault(); uploadZone.classList.add("drag-over"); });
+  uploadZone.addEventListener("dragleave", function () { uploadZone.classList.remove("drag-over"); });
+  uploadZone.addEventListener("drop", function () { uploadZone.classList.remove("drag-over"); });
+
+  // ── Recipe rows ──
+  var recipeRows = document.getElementById("recipeRows");
+  var rowCount   = 0;
+
+  function buildIngredientOptions(selectedId) {
+    var html = '<option value="" disabled' + (selectedId ? "" : " selected") + '>Select ingredient...</option>';
+    ingredients.forEach(function (ing) {
+      html += '<option value="' + ing.id + '"' +
+              (String(ing.id) === String(selectedId) ? " selected" : "") + '>' +
+              ing.name + ' (' + ing.unit + ')</option>';
+    });
+    return html;
+  }
+
+  function addRow(ingId, qty) {
+    var i = rowCount++;
+    var div = document.createElement("div");
+    div.className = "recipe-row";
+    div.dataset.row = i;
+    div.innerHTML =
+      '<div>' +
+        '<select class="recipe-select" name="ingredient_id[]">' + buildIngredientOptions(ingId) + '</select>' +
+        '<div class="recipe-unit-hint" id="unit_hint_' + i + '"></div>' +
+      '</div>' +
+      '<input class="recipe-qty" type="number" name="ingredient_qty[]" min="0.01" step="0.01" placeholder="Qty" value="' + (qty || "") + '" required>' +
+      '<button type="button" class="remove-recipe-btn" data-row="' + i + '"><i class="fas fa-xmark"></i></button>';
+    recipeRows.appendChild(div);
+
+    // Unit hint on select change
+    var sel = div.querySelector(".recipe-select");
+    var hint = div.querySelector(".recipe-unit-hint");
+    function updateHint() {
+      var found = ingredients.find(function (x) { return String(x.id) === sel.value; });
+      hint.textContent = found ? "Unit: " + found.unit : "";
+    }
+    sel.addEventListener("change", updateHint);
+    if (ingId) updateHint();
+  }
+
+  document.getElementById("addRowBtn").addEventListener("click", function () { addRow(); });
+
+  recipeRows.addEventListener("click", function (e) {
+    var btn = e.target.closest(".remove-recipe-btn");
+    if (!btn) return;
+    var row = recipeRows.querySelector('[data-row="' + btn.dataset.row + '"]');
+    if (row) row.remove();
+  });
+
+  // If no ingredients exist, show message
+  if (!ingredients.length) {
+    recipeRows.innerHTML = '<p style="font-size:12px;color:var(--warn);margin:0"><i class="fas fa-triangle-exclamation me-1"></i>No ingredients yet. <a href="/add-ingredient" style="color:var(--accent)">Add ingredients first</a>.</p>';
+    document.getElementById("addRowBtn").style.display = "none";
+  }
+
+  // ── Form validation ──
+  document.getElementById("addProductForm").addEventListener("submit", function (e) {
+    var btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+    // Basic check
+    var name = document.querySelector('input[name="name"]').value.trim();
+    if (!name) {
+      e.preventDefault();
+      toast("Product name is required", "err");
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-plus-circle"></i> Create Product';
+    }
+  });
+})();
+</script>
+
+{% endblock %}

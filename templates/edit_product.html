@@ -1,0 +1,494 @@
+{% extends "index.html" %}
+{% block title %}Edit Product | Kape Tubong{% endblock %}
+{% block content %}
+
+<style>
+.ep-page { padding: 20px; font-family: var(--font); }
+
+/* ── Header ── */
+.ep-header {
+  position: sticky; top: 0; z-index: 30;
+  background: rgba(15,14,12,.94); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px; margin: -20px -20px 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.ep-header h1 { font-size: 15px; font-weight: 700; color: var(--text); margin: 0; }
+.ep-header p  { font-size: 11px; color: var(--muted); margin: 2px 0 0; }
+
+.back-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--bg3);
+  color: var(--muted2); font-size: 11.5px; font-family: var(--font);
+  text-decoration: none; transition: .15s;
+}
+.back-btn:hover { color: var(--text); border-color: var(--border2); }
+
+/* ── Layout ── */
+.ep-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+/* ── Card ── */
+.ep-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.ep-card-head {
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  font-size: 13px; font-weight: 600; color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+}
+.ep-card-head i { color: var(--accent); font-size: 12px; }
+.ep-card-body { padding: 18px; }
+
+/* ── Fields ── */
+.field { margin-bottom: 16px; }
+.field:last-child { margin-bottom: 0; }
+.field-label {
+  display: block; font-size: 11px; font-weight: 600;
+  color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px;
+}
+.field-input, .field-select {
+  width: 100%;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-family: var(--font); font-size: 13px; padding: 9px 12px;
+  outline: none; transition: border-color .15s;
+}
+.field-input:focus, .field-select:focus { border-color: var(--accent); }
+.field-input::placeholder { color: var(--muted); }
+.field-select option { background: var(--bg3); }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* ── Image section ── */
+.img-current {
+  width: 100%; height: 180px; object-fit: cover;
+  border-radius: var(--radius-sm); display: block; margin-bottom: 10px;
+  background: var(--bg3);
+}
+.img-placeholder-box {
+  width: 100%; height: 180px;
+  background: var(--bg3); border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; color: var(--border2); margin-bottom: 10px;
+}
+.img-upload-zone {
+  border: 2px dashed var(--border2); border-radius: var(--radius);
+  padding: 18px 16px; text-align: center;
+  cursor: pointer; transition: .2s; background: var(--bg3);
+  position: relative; overflow: hidden;
+}
+.img-upload-zone:hover, .img-upload-zone.drag-over {
+  border-color: var(--accent); background: var(--accent-bg);
+}
+.img-upload-zone input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.img-upload-icon { font-size: 22px; color: var(--border2); margin-bottom: 6px; display: block; transition: .2s; }
+.img-upload-zone:hover .img-upload-icon { color: var(--accent); }
+.img-upload-text { font-size: 11.5px; color: var(--muted); }
+.img-upload-text strong { color: var(--accent2); }
+.img-new-preview {
+  width: 100%; height: 180px; object-fit: cover;
+  border-radius: var(--radius-sm); display: none; margin-bottom: 10px;
+  border: 2px solid var(--accent);
+}
+.img-new-preview.visible { display: block; }
+.img-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; padding: 2px 8px; border-radius: 999px;
+  background: rgba(212,169,106,.12); color: var(--accent);
+  border: 1px solid var(--border2); margin-bottom: 8px; font-family: var(--mono);
+}
+
+/* ── Recipe builder ── */
+.recipe-header-row {
+  display: grid; grid-template-columns: 1fr 100px 36px; gap: 8px; margin-bottom: 8px;
+}
+.recipe-header-row span {
+  font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em;
+}
+.recipe-row {
+  display: grid; grid-template-columns: 1fr 100px 36px; gap: 8px;
+  align-items: start; margin-bottom: 8px;
+}
+.recipe-row:last-child { margin-bottom: 0; }
+.recipe-select, .recipe-qty {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-family: var(--font); font-size: 12.5px; padding: 8px 10px;
+  outline: none; transition: border-color .15s; width: 100%;
+}
+.recipe-select:focus, .recipe-qty:focus { border-color: var(--accent); }
+.recipe-select option { background: var(--bg3); }
+.recipe-qty::placeholder { color: var(--muted); }
+.recipe-unit-hint { font-size: 10px; color: var(--muted); margin-top: 3px; font-family: var(--mono); }
+
+.remove-recipe-btn {
+  width: 34px; height: 34px;
+  background: rgba(212,96,96,.08); border: 1px solid rgba(212,96,96,.2);
+  border-radius: var(--radius-sm); color: var(--danger);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; transition: .15s; flex-shrink: 0;
+}
+.remove-recipe-btn:hover { background: rgba(212,96,96,.2); }
+
+.add-row-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 7px 12px; border-radius: var(--radius-sm);
+  border: 1px dashed var(--border2); background: transparent;
+  color: var(--muted2); font-size: 11.5px; font-family: var(--font);
+  cursor: pointer; transition: .15s; margin-top: 10px; width: 100%;
+}
+.add-row-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Existing recipe tag (loaded from DB) ── */
+.existing-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; padding: 2px 7px; border-radius: 999px;
+  background: rgba(93,184,138,.1); color: var(--success);
+  border: 1px solid rgba(93,184,138,.2); margin-bottom: 3px;
+  font-family: var(--mono);
+}
+
+/* ── Submit / danger buttons ── */
+.btn-submit {
+  width: 100%; padding: 12px; background: var(--accent);
+  border: none; border-radius: var(--radius-sm);
+  color: var(--bg); font-family: var(--font); font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: .15s;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+}
+.btn-submit:hover { background: var(--accent2); }
+.btn-submit:disabled { opacity: .5; cursor: not-allowed; }
+
+.ep-note { font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.5; text-align: center; }
+
+/* ── Toast ── */
+#epToast {
+  position: fixed; right: 16px; bottom: 20px; z-index: 9999;
+  padding: 9px 14px; font-size: 11.5px; font-family: var(--mono);
+  background: var(--bg3); border: 1px solid var(--border2);
+  color: var(--accent2); border-radius: var(--radius-sm);
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+}
+
+/* ── Recipe change notice ── */
+.recipe-notice {
+  font-size: 11px; color: var(--warn); margin-top: 8px;
+  padding: 8px 10px; background: rgba(212,149,74,.08);
+  border: 1px solid rgba(212,149,74,.2); border-radius: var(--radius-sm);
+  display: none;
+}
+.recipe-notice.visible { display: block; }
+
+@media (max-width: 900px) { .ep-grid { grid-template-columns: 1fr; } }
+</style>
+
+<div id="epToast"></div>
+
+<div class="ep-page">
+
+  <div class="ep-header">
+    <div>
+      <h1><i class="fas fa-pen me-2" style="color:var(--accent)"></i>Edit Product</h1>
+      <p>Update details, image, and recipe for <strong style="color:var(--accent2)">{{ product.name }}</strong></p>
+    </div>
+    <a href="{{ url_for('products') }}" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Products</a>
+  </div>
+
+  <form method="POST" action="/edit-product/{{ product.id }}" enctype="multipart/form-data" id="editProductForm">
+
+    <div class="ep-grid">
+
+      <!-- LEFT: Details + Recipe -->
+      <div style="display:flex;flex-direction:column;gap:16px">
+
+        <!-- Product details -->
+        <div class="ep-card">
+          <div class="ep-card-head"><i class="fas fa-tag"></i> Product Details</div>
+          <div class="ep-card-body">
+
+            <div class="field">
+              <label class="field-label">Product Name</label>
+              <input class="field-input" type="text" name="name" value="{{ product.name }}" required>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label">Price (₱)</label>
+                <input class="field-input" type="number" name="price" min="0" step="0.01"
+                       value="{{ "%.2f"|format(product.price|float) }}" required>
+              </div>
+              <div class="field">
+                <label class="field-label">Category</label>
+                <select class="field-select" name="category" required>
+                  {% set cats = [
+                    ('icedcoffee','Iced Coffee'),('icedlatte','Iced Latte'),
+                    ('milktea','Milk Tea'),('creamyfloats','Creamy Floats'),
+                    ('summerfloats','Summer Floats'),('lemonadetea','Lemonade & Tea'),
+                    ('matchaseries','Matcha Series'),('hotcoffee','Hot Coffee'),
+                    ('snacks','Snacks')
+                  ] %}
+                  {% for val, label in cats %}
+                  <option value="{{ val }}" {% if product.category == val %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Recipe editor -->
+        <div class="ep-card">
+          <div class="ep-card-head"><i class="fas fa-flask"></i> Recipe — Ingredients Per Order</div>
+          <div class="ep-card-body">
+
+            <div class="recipe-header-row">
+              <span>Ingredient</span>
+              <span>Qty used</span>
+              <span></span>
+            </div>
+
+            <div id="recipeRows">
+              {% for r in recipe %}
+              <div class="recipe-row" data-row="{{ loop.index0 }}">
+                <div>
+                  <select class="recipe-select" name="ingredient_id[]">
+                    <option value="" disabled>Select ingredient...</option>
+                    {% for ing in ingredients %}
+                    <option value="{{ ing.id }}"
+                      {% if ing.id == r.ingredient_id %}selected{% endif %}>
+                      {{ ing.name }} ({{ ing.unit }})
+                    </option>
+                    {% endfor %}
+                  </select>
+                  <div class="recipe-unit-hint">
+                    {% for ing in ingredients %}{% if ing.id == r.ingredient_id %}Unit: {{ ing.unit }}{% endif %}{% endfor %}
+                  </div>
+                </div>
+                <input class="recipe-qty" type="number" name="ingredient_qty[]"
+                       min="0.01" step="0.01" value="{{ r.quantity }}" required>
+                <button type="button" class="remove-recipe-btn"><i class="fas fa-xmark"></i></button>
+              </div>
+              {% endfor %}
+            </div>
+
+            <button type="button" class="add-row-btn" id="addRowBtn">
+              <i class="fas fa-plus"></i> Add Ingredient
+            </button>
+
+            <div class="recipe-notice" id="recipeNotice">
+              <i class="fas fa-triangle-exclamation me-1"></i>
+              Recipe changed — saving will replace all existing recipe rows for this product.
+            </div>
+
+            <p style="font-size:11px;color:var(--muted);margin-top:8px">
+              Qty = how much of this ingredient is deducted per 1 order of this product.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Image + save -->
+      <div style="display:flex;flex-direction:column;gap:16px">
+
+        <!-- Current image -->
+        <div class="ep-card">
+          <div class="ep-card-head"><i class="fas fa-image"></i> Product Image</div>
+          <div class="ep-card-body">
+
+            <div class="img-badge"><i class="fas fa-circle-check"></i> Current image</div>
+
+            <!-- New preview (shown after selecting a new file) -->
+            <img id="newImgPreview" class="img-new-preview" src="" alt="New image preview">
+
+            <!-- Existing image with fallback -->
+            <img id="currentImg"
+                 class="img-current"
+                 src="{{ url_for('static', filename='images/' ~ product.id ~ '.jpg') }}"
+                 alt="{{ product.name }}"
+                 onerror="this.style.display='none';document.getElementById('imgPlaceholder').style.display='flex'">
+            <div id="imgPlaceholder" class="img-placeholder-box" style="display:none">
+              <i class="fas fa-image"></i>
+            </div>
+
+            <div class="img-upload-zone" id="uploadZone">
+              <input type="file" name="image" accept="image/*" id="imageInput">
+              <i class="fas fa-cloud-arrow-up img-upload-icon"></i>
+              <div class="img-upload-text">
+                <strong>Replace image</strong> — click or drag & drop<br>
+                JPG, PNG, WEBP · max 5 MB
+              </div>
+            </div>
+
+            <div id="newImgName" style="font-size:11px;color:var(--muted);margin-top:6px;display:none"></div>
+
+          </div>
+        </div>
+
+        <!-- Save button -->
+        <div class="ep-card">
+          <div class="ep-card-body">
+            <button type="submit" class="btn-submit" id="submitBtn">
+              <i class="fas fa-floppy-disk"></i> Save Changes
+            </button>
+            <p class="ep-note">Changes take effect immediately in the Order page.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </form>
+
+</div>
+
+<!-- Pass ingredients as JSON for JS recipe builder -->
+<script id="ingredientsJson" type="application/json">{{ ingredients | tojson }}</script>
+
+<script>
+(function () {
+  var ingredients  = JSON.parse(document.getElementById("ingredientsJson").textContent);
+  var recipeRows   = document.getElementById("recipeRows");
+  var recipeNotice = document.getElementById("recipeNotice");
+  var rowCount = recipeRows.querySelectorAll('.recipe-row').length;
+  var recipeChanged = false;
+
+  function toast(msg, type) {
+    var t = document.getElementById("epToast");
+    t.textContent = msg;
+    t.style.borderColor = type === "err" ? "rgba(212,96,96,.4)" : "rgba(93,184,138,.4)";
+    t.style.color = type === "err" ? "var(--danger)" : "var(--success)";
+    t.style.opacity = "1";
+    clearTimeout(t._t);
+    t._t = setTimeout(function () { t.style.opacity = "0"; }, 2500);
+  }
+
+  function markChanged() {
+    if (!recipeChanged) {
+      recipeChanged = true;
+      recipeNotice.classList.add("visible");
+    }
+  }
+
+  // ── Ingredient options HTML ──
+  function buildOptions(selectedId) {
+    var html = '<option value="" disabled' + (selectedId ? '' : ' selected') + '>Select ingredient...</option>';
+    ingredients.forEach(function (ing) {
+      html += '<option value="' + ing.id + '"' +
+              (String(ing.id) === String(selectedId) ? ' selected' : '') + '>' +
+              ing.name + ' (' + ing.unit + ')</option>';
+    });
+    return html;
+  }
+
+  // ── Update unit hint on a row ──
+  function updateHint(row) {
+    var sel  = row.querySelector('.recipe-select');
+    var hint = row.querySelector('.recipe-unit-hint');
+    var found = ingredients.find(function (x) { return String(x.id) === sel.value; });
+    hint.textContent = found ? 'Unit: ' + found.unit : '';
+  }
+
+  // ── Wire up existing rows from Jinja ──
+  Array.from(recipeRows.querySelectorAll('.recipe-row')).forEach(function (row) {
+    var sel = row.querySelector('.recipe-select');
+    sel.addEventListener('change', function () { updateHint(row); markChanged(); });
+    row.querySelector('.recipe-qty').addEventListener('input', markChanged);
+    row.querySelector('.remove-recipe-btn').addEventListener('click', function () {
+      row.remove(); markChanged();
+    });
+  });
+
+  // ── Add new row ──
+  function addRow(ingId, qty) {
+    var i   = rowCount++;
+    var div = document.createElement('div');
+    div.className  = 'recipe-row';
+    div.dataset.row = i;
+    div.innerHTML =
+      '<div>' +
+        '<select class="recipe-select" name="ingredient_id[]">' + buildOptions(ingId) + '</select>' +
+        '<div class="recipe-unit-hint" id="hint_' + i + '"></div>' +
+      '</div>' +
+      '<input class="recipe-qty" type="number" name="ingredient_qty[]" min="0.01" step="0.01"' +
+             ' placeholder="Qty" value="' + (qty || '') + '" required>' +
+      '<button type="button" class="remove-recipe-btn"><i class="fas fa-xmark"></i></button>';
+    recipeRows.appendChild(div);
+
+    var sel  = div.querySelector('.recipe-select');
+    var hint = div.querySelector('.recipe-unit-hint');
+    sel.addEventListener('change', function () {
+      var found = ingredients.find(function (x) { return String(x.id) === sel.value; });
+      hint.textContent = found ? 'Unit: ' + found.unit : '';
+      markChanged();
+    });
+    div.querySelector('.recipe-qty').addEventListener('input', markChanged);
+    div.querySelector('.remove-recipe-btn').addEventListener('click', function () {
+      div.remove(); markChanged();
+    });
+    if (ingId) updateHint(div);
+    markChanged();
+  }
+
+  document.getElementById('addRowBtn').addEventListener('click', function () { addRow(); });
+
+  // ── Image preview ──
+  var imageInput   = document.getElementById('imageInput');
+  var newPreview   = document.getElementById('newImgPreview');
+  var currentImg   = document.getElementById('currentImg');
+  var imgPlaceholder = document.getElementById('imgPlaceholder');
+  var newImgName   = document.getElementById('newImgName');
+  var uploadZone   = document.getElementById('uploadZone');
+
+  imageInput.addEventListener('change', function () {
+    var file = imageInput.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast('Image too large (max 5 MB)', 'err');
+      imageInput.value = '';
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      newPreview.src = e.target.result;
+      newPreview.classList.add('visible');
+      // dim current image
+      if (currentImg) currentImg.style.opacity = '.3';
+      if (imgPlaceholder) imgPlaceholder.style.opacity = '.3';
+      newImgName.textContent = '↑ New: ' + file.name;
+      newImgName.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  uploadZone.addEventListener('dragover', function (e) { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone.addEventListener('dragleave', function () { uploadZone.classList.remove('drag-over'); });
+  uploadZone.addEventListener('drop', function () { uploadZone.classList.remove('drag-over'); });
+
+  // ── Form submit ──
+  document.getElementById('editProductForm').addEventListener('submit', function (e) {
+    var btn = document.getElementById('submitBtn');
+    var name = document.querySelector('input[name="name"]').value.trim();
+    if (!name) {
+      e.preventDefault();
+      toast('Product name is required', 'err');
+      return;
+    }
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+  });
+
+})();
+</script>
+
+{% endblock %}
