@@ -3,119 +3,74 @@
 {% block content %}
 
 <style>
-.inv-page {
-  padding: 20px;
-  font-family: var(--font);
-}
+.inv-page { padding: 20px; font-family: var(--font); }
 
 /* ── Header ── */
 .inv-header {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  background: rgba(15,14,12,.94);
-  backdrop-filter: blur(10px);
+  position: sticky; top: 0; z-index: 30;
+  background: rgba(15,14,12,.94); backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
-  padding: 12px 20px;
-  margin: -20px -20px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
+  padding: 12px 20px; margin: -20px -20px 20px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
 }
-.inv-title-wrap h1 {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text);
-  margin: 0;
-}
-.inv-title-wrap p {
-  font-size: 11px;
-  color: var(--muted);
-  margin: 2px 0 0;
-}
+.inv-header h1 { font-size: 15px; font-weight: 700; color: var(--text); margin: 0; }
+.inv-header p  { font-size: 11px; color: var(--muted); margin: 2px 0 0; }
+.header-right  { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
-.inv-filter-group {
-  display: flex;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 3px;
-  gap: 2px;
-}
-.inv-filter-btn {
-  font-size: 11.5px;
-  font-family: var(--font);
-  padding: 5px 12px;
-  border-radius: 7px;
-  border: none;
-  background: transparent;
-  color: var(--muted2);
-  cursor: pointer;
-  transition: .15s;
-  font-weight: 500;
-}
-.inv-filter-btn:hover { color: var(--text); background: var(--bg4); }
-.inv-filter-btn.active { background: var(--accent); color: var(--bg); }
-
-/* ── Stat cards ── */
+/* ── Stat tiles ── */
 .inv-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0,1fr));
-  gap: 10px;
-  margin-bottom: 16px;
+  display: grid; grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 10px; margin-bottom: 16px;
 }
 .stat-tile {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  transition: .2s;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px; transition: .2s;
 }
 .stat-tile:hover { border-color: var(--border2); transform: translateY(-1px); }
-.stat-icon-box {
-  width: 36px; height: 36px;
-  border-radius: var(--radius-sm);
+.st-icon {
+  width: 36px; height: 36px; border-radius: var(--radius-sm);
   display: flex; align-items: center; justify-content: center;
-  font-size: 14px;
-  flex-shrink: 0;
+  font-size: 14px; flex-shrink: 0;
 }
-.stat-icon-box.all     { background: rgba(212,169,106,.12); color: var(--accent); }
-.stat-icon-box.low     { background: rgba(212,149,74,.12);  color: var(--warn); }
-.stat-icon-box.out     { background: rgba(212,96,96,.12);   color: var(--danger); }
-.stat-tile-label { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
-.stat-tile-value { font-size: 1.5rem; font-weight: 700; line-height: 1; font-family: var(--mono); color: var(--text); }
+.st-icon.all     { background: rgba(212,169,106,.12); color: var(--accent); }
+.st-icon.ok      { background: rgba(93,184,138,.12);  color: var(--success); }
+.st-icon.low     { background: rgba(212,149,74,.12);  color: var(--warn); }
+.st-icon.out     { background: rgba(212,96,96,.12);   color: var(--danger); }
+.st-lbl { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+.st-val { font-size: 1.4rem; font-weight: 700; font-family: var(--mono); color: var(--text); line-height: 1; }
 
-/* ── Panel ── */
+/* ── Tab switcher ── */
+.inv-tabs {
+  display: flex; gap: 4px; margin-bottom: 14px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 4px; width: fit-content;
+}
+.inv-tab {
+  font-size: 12px; padding: 7px 14px; border-radius: var(--radius-sm);
+  border: none; background: transparent;
+  color: var(--muted2); cursor: pointer; font-family: var(--font);
+  font-weight: 500; transition: .15s; display: flex; align-items: center; gap: 6px;
+}
+.inv-tab:hover { color: var(--text); background: var(--bg3); }
+.inv-tab.active { background: var(--accent); color: var(--bg); }
+.inv-tab-panel { display: none; }
+.inv-tab-panel.active { display: block; }
+
+/* ── Shared panel styles ── */
 .inv-panel {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
 }
 .inv-panel-head {
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  padding: 12px 14px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
 }
 .search-bar {
-  flex: 1;
-  min-width: 180px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0 10px;
-  transition: .15s;
+  flex: 1; min-width: 160px;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 0 10px; transition: .15s;
 }
 .search-bar:focus-within { border-color: var(--accent); }
 .search-bar i { color: var(--muted); font-size: 11px; }
@@ -125,449 +80,902 @@
   padding: 8px 0; width: 100%;
 }
 .search-bar input::placeholder { color: var(--muted); }
-
-.btn-ghost-sm {
-  font-size: 11.5px;
-  padding: 7px 11px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: var(--bg3);
-  color: var(--muted2);
-  cursor: pointer;
-  font-family: var(--font);
-  transition: .15s;
-  display: flex; align-items: center; gap: 5px;
-  white-space: nowrap;
+.filter-btn-group {
+  display: flex; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 2px; gap: 1px;
 }
-.btn-ghost-sm:hover { color: var(--text); border-color: var(--border2); }
-.btn-ghost-sm.accent { color: var(--accent); border-color: var(--accent); }
+.fbtn {
+  font-size: 11px; padding: 4px 10px; border-radius: 5px;
+  border: none; background: transparent; color: var(--muted2);
+  cursor: pointer; font-family: var(--font); transition: .15s;
+}
+.fbtn:hover { color: var(--text); background: var(--bg4); }
+.fbtn.active { background: var(--accent); color: var(--bg); }
+.btn-ghost {
+  display: flex; align-items: center; gap: 5px;
+  padding: 7px 11px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--bg3);
+  color: var(--muted2); font-size: 11.5px; font-family: var(--font);
+  cursor: pointer; transition: .15s; white-space: nowrap;
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--border2); }
+.btn-accent {
+  display: flex; align-items: center; gap: 5px;
+  padding: 7px 13px; border-radius: var(--radius-sm);
+  border: none; background: var(--accent);
+  color: var(--bg); font-size: 11.5px; font-family: var(--font);
+  font-weight: 700; cursor: pointer; transition: .15s;
+  text-decoration: none;
+}
+.btn-accent:hover { background: var(--accent2); color: var(--bg); }
 
-/* ── Table ── */
-.inv-table-wrap { max-height: 62vh; overflow: auto; }
-.inv-table { width: 100%; border-collapse: collapse; }
-.inv-table thead th {
+/* ── Table base ── */
+.tbl-wrap { max-height: 58vh; overflow: auto; }
+.tbl-wrap::-webkit-scrollbar { width: 4px; }
+.tbl-wrap::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+.inv-tbl { width: 100%; border-collapse: collapse; }
+.inv-tbl thead th {
   position: sticky; top: 0; z-index: 5;
-  background: var(--bg3);
-  border-bottom: 1px solid var(--border);
-  padding: 10px 14px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  white-space: nowrap;
+  background: var(--bg3); border-bottom: 1px solid var(--border);
+  padding: 10px 14px; font-size: 10.5px; font-weight: 600;
+  color: var(--muted); text-transform: uppercase; letter-spacing: .07em;
+  white-space: nowrap; cursor: pointer; user-select: none;
 }
-.inv-table tbody tr {
-  border-bottom: 1px solid var(--border);
-  transition: .12s;
+.inv-tbl thead th:hover { color: var(--text2); }
+.inv-tbl thead th .sort-icon { margin-left: 4px; opacity: .4; font-size: 9px; }
+.inv-tbl tbody tr {
+  border-bottom: 1px solid var(--border); transition: background .1s;
 }
-.inv-table tbody tr:last-child { border-bottom: none; }
-.inv-table tbody tr:hover { background: var(--bg3); }
-.inv-table tbody tr.row-low { background: rgba(212,149,74,.04); }
-.inv-table tbody tr.row-out { background: rgba(212,96,96,.04); }
-.inv-table tbody tr.row-low:hover { background: rgba(212,149,74,.08); }
-.inv-table tbody tr.row-out:hover { background: rgba(212,96,96,.08); }
-.inv-table td {
-  padding: 11px 14px;
-  font-size: 13px;
-  color: var(--text2);
-  vertical-align: middle;
-}
+.inv-tbl tbody tr:last-child { border-bottom: none; }
+.inv-tbl tbody tr:hover { background: var(--bg3); }
+.inv-tbl tbody tr.row-low  { background: rgba(212,149,74,.04); }
+.inv-tbl tbody tr.row-out  { background: rgba(212,96,96,.04); }
+.inv-tbl tbody tr.row-low:hover { background: rgba(212,149,74,.08); }
+.inv-tbl tbody tr.row-out:hover { background: rgba(212,96,96,.08); }
+.inv-tbl td { padding: 11px 14px; font-size: 12.5px; color: var(--text2); vertical-align: middle; }
+.td-name { font-weight: 600; color: var(--text); }
+.td-unit { font-size: 10px; color: var(--muted); font-family: var(--mono); margin-top: 1px; }
+.td-mono { font-family: var(--mono); font-size: 12px; }
 
-.ing-name { font-weight: 600; color: var(--text); }
-.ing-unit { font-size: 11px; color: var(--muted); margin-top: 1px; font-family: var(--mono); }
-
-.stock-val { font-family: var(--mono); font-weight: 600; font-size: 13px; }
-
-.status-pill {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 3px 9px; border-radius: 999px;
-  font-size: 11px; font-weight: 600;
+/* ── Status pill ── */
+.s-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 600;
 }
-.pill-ok   { background: rgba(93,184,138,.12); color: var(--success); border: 1px solid rgba(93,184,138,.2); }
-.pill-low  { background: rgba(212,149,74,.12);  color: var(--warn);    border: 1px solid rgba(212,149,74,.2); }
-.pill-out  { background: rgba(212,96,96,.12);   color: var(--danger);  border: 1px solid rgba(212,96,96,.2); }
-.pill-dot  { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.s-ok  { background: rgba(93,184,138,.1);  color: var(--success); border: 1px solid rgba(93,184,138,.2); }
+.s-low { background: rgba(212,149,74,.1);  color: var(--warn);    border: 1px solid rgba(212,149,74,.2); }
+.s-out { background: rgba(212,96,96,.1);   color: var(--danger);  border: 1px solid rgba(212,96,96,.2); }
+.s-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 
-/* ── Update form ── */
-.update-form { display: flex; align-items: center; gap: 7px; justify-content: flex-end; }
-.stock-num-input {
-  width: 90px;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 12px;
-  padding: 6px 8px;
-  outline: none;
-  transition: .15s;
+/* ── Update form inline ── */
+.update-form { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+.stock-input {
+  width: 80px; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-family: var(--mono); font-size: 12px; padding: 6px 8px;
+  outline: none; transition: .15s; text-align: center;
 }
-.stock-num-input:focus { border-color: var(--accent); }
-.save-btn-sm {
-  padding: 6px 12px;
-  background: var(--accent);
-  border: none;
-  border-radius: var(--radius-sm);
-  color: var(--bg);
-  font-size: 11.5px;
-  font-weight: 600;
-  font-family: var(--font);
-  cursor: pointer;
-  display: flex; align-items: center; gap: 5px;
-  transition: .15s;
-  white-space: nowrap;
+.stock-input:focus { border-color: var(--accent); }
+.save-btn {
+  padding: 6px 10px; background: var(--accent); border: none;
+  border-radius: var(--radius-sm); color: var(--bg);
+  font-size: 11px; font-weight: 700; font-family: var(--font);
+  cursor: pointer; transition: .15s; white-space: nowrap;
+  display: flex; align-items: center; gap: 4px;
 }
-.save-btn-sm:hover { background: var(--accent2); }
-.save-btn-sm:disabled { opacity: .5; cursor: not-allowed; }
+.save-btn:hover { background: var(--accent2); }
+.save-btn:disabled { opacity: .5; cursor: not-allowed; }
+.del-btn {
+  width: 28px; height: 28px; background: rgba(212,96,96,.08);
+  border: 1px solid rgba(212,96,96,.2); border-radius: var(--radius-sm);
+  color: var(--danger); cursor: pointer; font-size: 10px;
+  display: flex; align-items: center; justify-content: center; transition: .15s;
+}
+.del-btn:hover { background: rgba(212,96,96,.2); }
+.row-fb { font-size: 10.5px; font-weight: 600; font-family: var(--mono); margin-top: 3px; text-align: right; min-height: 14px; }
+.row-fb.ok  { color: var(--success); }
+.row-fb.err { color: var(--danger); }
 
-.row-feedback {
-  font-size: 11px;
-  font-weight: 600;
-  min-height: 14px;
-  text-align: right;
-  margin-top: 3px;
-  font-family: var(--mono);
+/* ── Usage history tab ── */
+.usage-bar-wrap { display: flex; flex-direction: column; gap: 10px; }
+.usage-row {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  transition: .2s;
 }
-.row-feedback.ok  { color: var(--success); }
-.row-feedback.err { color: var(--danger); }
+.usage-row:hover { border-color: var(--border2); }
+.usage-row-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  margin-bottom: 8px;
+}
+.usage-name { font-size: 12.5px; font-weight: 600; color: var(--text); }
+.usage-meta { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+.usage-stats { display: flex; gap: 16px; margin-bottom: 8px; }
+.usage-stat-item { font-size: 11px; }
+.usage-stat-item .usv { font-weight: 700; color: var(--accent2); font-family: var(--mono); }
+.usage-stat-item .usl { color: var(--muted); margin-left: 2px; }
+.usage-track {
+  height: 6px; background: var(--bg4);
+  border-radius: 3px; overflow: hidden;
+}
+.usage-fill {
+  height: 100%; border-radius: 3px;
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+}
+.usage-fill.high { background: linear-gradient(90deg, var(--danger), #e08080); }
+.usage-fill.med  { background: linear-gradient(90deg, var(--warn),   #e0b080); }
 
-/* ── Footer ── */
-.inv-panel-footer {
-  padding: 10px 14px;
+/* ── Estimated servings tab ── */
+.prod-servings-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr));
+  gap: 10px; padding: 14px;
+}
+.ps-card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px; transition: .2s;
+}
+.ps-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+.ps-card.zero  { border-color: rgba(212,96,96,.3); background: rgba(212,96,96,.04); }
+.ps-card.low-s { border-color: rgba(212,149,74,.3); background: rgba(212,149,74,.04); }
+
+.ps-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.ps-img {
+  width: 40px; height: 40px; border-radius: var(--radius-sm);
+  object-fit: cover; background: var(--bg4); flex-shrink: 0;
+}
+.ps-img-ph {
+  width: 40px; height: 40px; border-radius: var(--radius-sm);
+  background: var(--bg4); display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--border2); flex-shrink: 0;
+}
+.ps-name { font-size: 12.5px; font-weight: 600; color: var(--text); line-height: 1.3; }
+.ps-cat  { font-size: 10px; color: var(--muted); margin-top: 1px; font-family: var(--mono); }
+
+.ps-servings-big {
+  text-align: center; padding: 12px 0 10px;
   border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+.ps-num {
+  font-size: 2.4rem; font-weight: 800; font-family: var(--mono);
+  line-height: 1; color: var(--success);
+}
+.ps-num.zero { color: var(--danger); }
+.ps-num.low  { color: var(--warn); }
+.ps-num-label { font-size: 10px; color: var(--muted); margin-top: 3px; text-transform: uppercase; letter-spacing: .06em; }
+
+.ps-limiting {
+  font-size: 11px; color: var(--muted2); line-height: 1.4;
+  display: flex; align-items: flex-start; gap: 5px;
+}
+.ps-limiting i { color: var(--warn); font-size: 10px; margin-top: 1px; flex-shrink: 0; }
+.ps-no-recipe {
+  font-size: 11px; color: var(--muted); text-align: center;
+  padding: 8px 0; font-style: italic;
+}
+
+/* Loading / empty states */
+.state-loading {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 40px; color: var(--muted); font-size: 12px;
+}
+.spin-ring {
+  width: 18px; height: 18px; border: 2px solid var(--border2);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.state-empty { text-align: center; padding: 40px; color: var(--muted); }
+.state-empty i { font-size: 24px; display: block; margin-bottom: 10px; color: var(--border2); }
+
+/* Panel footer */
+.inv-panel-footer {
+  padding: 9px 14px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
   background: var(--bg2);
 }
-.inv-counter { font-size: 11px; color: var(--muted); font-family: var(--mono); }
-.inv-hint    { font-size: 11px; color: var(--muted); }
-.inv-hint kbd {
-  background: var(--bg3);
-  border: 1px solid var(--border2);
-  border-radius: 4px;
-  padding: 1px 5px;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text2);
+.inv-footer-count { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+.inv-footer-hint  { font-size: 11px; color: var(--muted); }
+.inv-footer-hint kbd {
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: 4px; padding: 1px 5px;
+  font-family: var(--mono); font-size: 10px; color: var(--text2);
 }
 
-/* ── Empty state ── */
-.empty-inv {
-  text-align: center;
-  padding: 40px 16px;
-  color: var(--muted);
+/* Confirm delete dialog */
+.confirm-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.6);
+  z-index: 200; display: none; align-items: center; justify-content: center;
 }
-.empty-inv i { font-size: 24px; margin-bottom: 10px; display: block; color: var(--border2); }
+.confirm-overlay.open { display: flex; }
+.confirm-box {
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 24px; width: min(90vw,360px);
+  box-shadow: 0 24px 64px rgba(0,0,0,.5); text-align: center;
+}
+.confirm-box h3 { font-size: 15px; color: var(--text); margin-bottom: 8px; }
+.confirm-box p  { font-size: 12.5px; color: var(--muted2); margin-bottom: 20px; line-height: 1.6; }
+.confirm-actions { display: flex; gap: 8px; }
+.btn-confirm-del {
+  flex: 1; padding: 10px; background: var(--danger); border: none;
+  border-radius: var(--radius-sm); color: #fff; font-family: var(--font);
+  font-size: 12.5px; font-weight: 700; cursor: pointer; transition: .15s;
+}
+.btn-confirm-del:hover { background: #e06060; }
+.btn-confirm-cancel {
+  flex: 1; padding: 10px; background: transparent; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--muted2); font-family: var(--font);
+  font-size: 12.5px; cursor: pointer; transition: .15s;
+}
+.btn-confirm-cancel:hover { color: var(--text); border-color: var(--border2); }
 
-/* ── Mobile ── */
-@media (max-width: 820px) {
-  .inv-table thead { display: none; }
-  .inv-table tbody tr {
-    display: block;
-    background: var(--bg2) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--radius-sm);
-    margin: 8px;
-    overflow: hidden;
-  }
-  .inv-table tbody td {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--border);
-    padding: 9px 12px;
-  }
-  .inv-table tbody td:last-child { border-bottom: none; }
-  .inv-table tbody td::before {
-    content: attr(data-label);
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: .06em;
-    margin-right: 10px;
-    flex-shrink: 0;
-  }
+/* Toast */
+#invToast {
+  position: fixed; right: 16px; bottom: 20px; z-index: 9999;
+  padding: 9px 14px; font-size: 11.5px; font-family: var(--mono);
+  background: var(--bg3); border: 1px solid var(--border2);
+  color: var(--accent2); border-radius: var(--radius-sm);
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+}
+
+@media (max-width: 900px) {
+  .inv-stats { grid-template-columns: repeat(2,1fr); }
+  .prod-servings-grid { grid-template-columns: repeat(2,1fr); }
+}
+@media (max-width: 600px) {
   .inv-stats { grid-template-columns: 1fr; }
+  .prod-servings-grid { grid-template-columns: 1fr; }
+  .inv-tbl thead { display: none; }
+  .inv-tbl tbody tr { display: block; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); margin: 8px; }
+  .inv-tbl tbody td { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding: 9px 12px; }
+  .inv-tbl tbody td:last-child { border-bottom: none; }
+  .inv-tbl tbody td::before { content: attr(data-label); font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-right: 10px; flex-shrink: 0; }
 }
 </style>
+
+<div id="invToast"></div>
+
+<!-- Confirm delete -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <h3><i class="fas fa-triangle-exclamation" style="color:var(--danger);margin-right:6px"></i>Delete Ingredient</h3>
+    <p id="confirmMsg">This will also remove it from all product recipes.</p>
+    <div class="confirm-actions">
+      <button class="btn-confirm-del" id="confirmDelBtn">Delete</button>
+      <button class="btn-confirm-cancel" id="confirmCancelBtn">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <div class="inv-page">
 
   <!-- Header -->
   <div class="inv-header">
-    <div class="inv-title-wrap">
+    <div>
       <h1><i class="fas fa-boxes-stacked me-2" style="color:var(--accent)"></i>Inventory</h1>
-      <p>Real-time stock control — quick filters and instant updates</p>
+      <p>Stock levels, usage history, and estimated servings</p>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <div class="inv-filter-group" id="filterGroup">
-        <button class="inv-filter-btn active" data-filter="all">All</button>
-        <button class="inv-filter-btn" data-filter="low">Low Stock</button>
-        <button class="inv-filter-btn" data-filter="out">Out of Stock</button>
-      </div>
+    <div class="header-right">
+      <a href="{{ url_for('add_ingredient') }}" class="btn-accent">
+        <i class="fas fa-plus"></i> Add Ingredient
+      </a>
     </div>
   </div>
 
   <!-- Stats -->
   <div class="inv-stats">
     <div class="stat-tile">
-      <div class="stat-icon-box all"><i class="fas fa-cubes"></i></div>
-      <div>
-        <div class="stat-tile-label">Total Ingredients</div>
-        <div class="stat-tile-value" id="statTotal">{{ ingredients|length }}</div>
-      </div>
+      <div class="st-icon all"><i class="fas fa-cubes"></i></div>
+      <div><div class="st-lbl">Total Ingredients</div><div class="st-val" id="statTotal">{{ ingredients|length }}</div></div>
     </div>
     <div class="stat-tile">
-      <div class="stat-icon-box low"><i class="fas fa-triangle-exclamation"></i></div>
-      <div>
-        <div class="stat-tile-label">Low Stock (≤20)</div>
-        <div class="stat-tile-value" id="statLow">{{ ingredients | selectattr('stock', 'le', 20) | list | length }}</div>
-      </div>
+      <div class="st-icon ok"><i class="fas fa-circle-check"></i></div>
+      <div><div class="st-lbl">In Stock</div><div class="st-val" id="statOk">{{ ingredients|selectattr('stock','gt',20)|list|length }}</div></div>
     </div>
     <div class="stat-tile">
-      <div class="stat-icon-box out"><i class="fas fa-circle-xmark"></i></div>
-      <div>
-        <div class="stat-tile-label">Out of Stock</div>
-        <div class="stat-tile-value" id="statOut">{{ ingredients | selectattr('stock', 'equalto', 0) | list | length }}</div>
+      <div class="st-icon low"><i class="fas fa-triangle-exclamation"></i></div>
+      <div><div class="st-lbl">Low Stock (≤20)</div><div class="st-val" id="statLow">{{ ingredients|selectattr('stock','le',20)|selectattr('stock','gt',0)|list|length }}</div></div>
+    </div>
+    <div class="stat-tile">
+      <div class="st-icon out"><i class="fas fa-circle-xmark"></i></div>
+      <div><div class="st-lbl">Out of Stock</div><div class="st-val" id="statOut">{{ ingredients|selectattr('stock','equalto',0)|list|length }}</div></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="inv-tabs" id="invTabs">
+    <button class="inv-tab active" data-tab="stock">
+      <i class="fas fa-boxes-stacked"></i> Stock
+    </button>
+    <button class="inv-tab" data-tab="usage">
+      <i class="fas fa-chart-bar"></i> Usage History
+    </button>
+    <button class="inv-tab" data-tab="servings">
+      <i class="fas fa-mug-hot"></i> Estimated Servings
+    </button>
+  </div>
+
+  <!-- ══ TAB 1: STOCK ══ -->
+  <div class="inv-tab-panel active" id="tab-stock">
+    <div class="inv-panel">
+      <div class="inv-panel-head">
+        <div class="search-bar">
+          <i class="fas fa-magnifying-glass"></i>
+          <input type="text" id="stockSearch" placeholder="Search ingredient..." aria-label="Search">
+        </div>
+        <div class="filter-btn-group" id="stockFilterGroup">
+          <button class="fbtn active" data-f="all">All</button>
+          <button class="fbtn" data-f="low">Low</button>
+          <button class="fbtn" data-f="out">Out</button>
+        </div>
+        <button class="btn-ghost" id="exportCsvBtn"><i class="fas fa-file-csv"></i> Export</button>
+      </div>
+
+      <div class="tbl-wrap">
+        <table class="inv-tbl">
+          <thead>
+            <tr>
+              <th style="padding-left:18px" data-col="name">Ingredient <i class="fas fa-sort sort-icon"></i></th>
+              <th data-col="stock">Stock <i class="fas fa-sort sort-icon"></i></th>
+              <th>Status</th>
+              <th style="text-align:right;padding-right:18px">Update / Delete</th>
+            </tr>
+          </thead>
+          <tbody id="stockBody">
+            {% for i in ingredients %}
+            <tr id="ing-row-{{ i.id }}"
+                data-stock="{{ i.stock }}"
+                data-name="{{ i.name|lower }}"
+                class="{% if i.stock == 0 %}row-out{% elif i.stock <= 20 %}row-low{% endif %}">
+
+              <td style="padding-left:18px" data-label="Ingredient">
+                <div class="td-name">{{ i.name }}</div>
+                <div class="td-unit">{{ i.unit }}</div>
+              </td>
+
+              <td data-label="Stock" class="td-mono">
+                <span class="stock-disp">{{ i.stock }} {{ i.unit }}</span>
+              </td>
+
+              <td data-label="Status">
+                {% if i.stock == 0 %}
+                  <span class="s-pill s-out"><span class="s-dot"></span>Out</span>
+                {% elif i.stock <= 20 %}
+                  <span class="s-pill s-low"><span class="s-dot"></span>Low</span>
+                {% else %}
+                  <span class="s-pill s-ok"><span class="s-dot"></span>In Stock</span>
+                {% endif %}
+              </td>
+
+              <td style="padding-right:18px" data-label="Update">
+                <form class="inv-update-form" action="/inventory/update" method="POST">
+                  <input type="hidden" name="ingredient_id" value="{{ i.id }}">
+                  <div class="update-form">
+                    <input type="number" name="stock" class="stock-input" value="{{ i.stock }}" min="0" required>
+                    <button type="submit" class="save-btn"><i class="fas fa-floppy-disk"></i> Save</button>
+                    <button type="button" class="del-btn"
+                            data-id="{{ i.id }}" data-name="{{ i.name }}"
+                            title="Delete"><i class="fas fa-trash"></i></button>
+                  </div>
+                  <div class="row-fb" aria-live="polite"></div>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4">
+              <div class="state-empty"><i class="fas fa-box-open"></i>No ingredients found</div>
+            </td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="inv-panel-footer">
+        <span class="inv-footer-hint">Press <kbd>/</kbd> to search</span>
+        <span class="inv-footer-count" id="stockCount"></span>
       </div>
     </div>
   </div>
 
-  <!-- Panel -->
-  <div class="inv-panel">
-    <div class="inv-panel-head">
-      <div class="search-bar">
-        <i class="fas fa-magnifying-glass"></i>
-        <input type="text" id="searchInv" placeholder="Search ingredient..." aria-label="Search ingredient">
+  <!-- ══ TAB 2: USAGE HISTORY ══ -->
+  <div class="inv-tab-panel" id="tab-usage">
+    <div class="inv-panel">
+      <div class="inv-panel-head">
+        <div class="search-bar">
+          <i class="fas fa-magnifying-glass"></i>
+          <input type="text" id="usageSearch" placeholder="Search ingredient...">
+        </div>
+        <div class="filter-btn-group" id="usagePeriodGroup">
+          <button class="fbtn active" data-period="7">7 days</button>
+          <button class="fbtn" data-period="30">30 days</button>
+          <button class="fbtn" data-period="all">All time</button>
+        </div>
       </div>
-      <button class="btn-ghost-sm" id="resetBtn"><i class="fas fa-rotate-left"></i> Reset</button>
-      <button class="btn-ghost-sm accent" id="exportBtn"><i class="fas fa-file-csv"></i> Export CSV</button>
-    </div>
 
-    <div class="inv-table-wrap">
-      <table class="inv-table">
-        <thead>
-          <tr>
-            <th style="padding-left:18px">Ingredient</th>
-            <th>Stock</th>
-            <th>Status</th>
-            <th style="text-align:right;padding-right:18px">Update</th>
-          </tr>
-        </thead>
-        <tbody id="invBody" >
-          {% for i in ingredients %}
-          {% set is_out = i.stock == 0 %}
-          {% set is_low = i.stock <= 20 and i.stock > 0 %}
-          <tr class="{% if is_out %}row-out{% elif is_low %}row-low{% endif %}" data-stock="{{ i.stock }}">
+      <div id="usageContent" style="padding:14px">
+        <div class="state-loading"><div class="spin-ring"></div> Loading usage data…</div>
+      </div>
 
-            <td style="padding-left:18px" data-label="Ingredient">
-              <div class="ing-name">{{ i.name }}</div>
-              <div class="ing-unit">{{ i.unit }}</div>
-            </td>
-
-            <td data-label="Stock">
-              <span class="stock-val">{{ i.stock }} {{ i.unit }}</span>
-            </td>
-
-            <td data-label="Status">
-              {% if is_out %}
-                <span class="status-pill pill-out"><span class="pill-dot"></span>Out</span>
-              {% elif is_low %}
-                <span class="status-pill pill-low"><span class="pill-dot"></span>Low</span>
-              {% else %}
-                <span class="status-pill pill-ok"><span class="pill-dot"></span>In Stock</span>
-              {% endif %}
-            </td>
-
-            <td style="padding-right:18px" data-label="Update">
-              <form class="inv-update-form" action="/inventory/update" method="POST">
-                <input type="hidden" name="ingredient_id" value="{{ i.id }}">
-                <div class="update-form">
-                  <input type="number" name="stock" class="stock-num-input" value="{{ i.stock }}" min="0" required>
-                  <button type="submit" class="save-btn-sm"><i class="fas fa-floppy-disk"></i> Save</button>
-                </div>
-                <div class="row-feedback" aria-live="polite"></div>
-              </form>
-            </td>
-          </tr>
-          {% else %}
-          <tr>
-            <td colspan="4">
-              <div class="empty-inv">
-                <i class="fas fa-box-open"></i>
-                No ingredients found.
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-
-    <div class="inv-panel-footer">
-      <span class="inv-hint">Press <kbd>/</kbd> to search</span>
-      <span class="inv-counter" id="countText"></span>
+      <div class="inv-panel-footer">
+        <span class="inv-footer-count" id="usageCount"></span>
+        <span class="inv-footer-hint" style="color:var(--muted)">Based on completed orders</span>
+      </div>
     </div>
   </div>
 
-</div>
+  <!-- ══ TAB 3: ESTIMATED SERVINGS ══ -->
+  <div class="inv-tab-panel" id="tab-servings">
+    <div class="inv-panel">
+      <div class="inv-panel-head">
+        <div class="search-bar">
+          <i class="fas fa-magnifying-glass"></i>
+          <input type="text" id="servingsSearch" placeholder="Search product...">
+        </div>
+        <div class="filter-btn-group" id="servingsFilterGroup">
+          <button class="fbtn active" data-sf="all">All</button>
+          <button class="fbtn" data-sf="zero">Can't make</button>
+          <button class="fbtn" data-sf="low">Low (≤5)</button>
+          <button class="fbtn" data-sf="ok">Available</button>
+        </div>
+        <button class="btn-ghost" id="refreshServings"><i class="fas fa-rotate"></i> Refresh</button>
+      </div>
+
+      <div id="servingsContent">
+        <div class="state-loading"><div class="spin-ring"></div> Calculating servings…</div>
+      </div>
+
+      <div class="inv-panel-footer">
+        <span class="inv-footer-count" id="servingsCount"></span>
+        <span class="inv-footer-hint" style="color:var(--muted)">Based on current ingredient stock</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end inv-page -->
 
 <script>
 (function () {
-  var searchEl  = document.getElementById("searchInv");
-  var resetBtn  = document.getElementById("resetBtn");
-  var exportBtn = document.getElementById("exportBtn");
-  var countText = document.getElementById("countText");
-  var invBody   = document.getElementById("invBody");
-  var rows      = Array.from(invBody.querySelectorAll("tr[data-stock]"));
-  var filterGroup = document.getElementById("filterGroup");
 
-  var statTotal = document.getElementById("statTotal");
-  var statLow   = document.getElementById("statLow");
-  var statOut   = document.getElementById("statOut");
-
-  var activeFilter = "all";
-
-  function statusHtml(stock) {
-    if (stock === 0)  return '<span class="status-pill pill-out"><span class="pill-dot"></span>Out</span>';
-    if (stock <= 20)  return '<span class="status-pill pill-low"><span class="pill-dot"></span>Low</span>';
-    return '<span class="status-pill pill-ok"><span class="pill-dot"></span>In Stock</span>';
+  /* ── Toast ── */
+  function toast(msg, type) {
+    var t = document.getElementById('invToast');
+    t.textContent = msg;
+    t.style.borderColor = type === 'err' ? 'rgba(212,96,96,.4)' : 'rgba(93,184,138,.4)';
+    t.style.color = type === 'err' ? 'var(--danger)' : 'var(--success)';
+    t.style.opacity = '1';
+    clearTimeout(t._t);
+    t._t = setTimeout(function () { t.style.opacity = '0'; }, 2500);
   }
 
-  function updateRowClass(row, stock) {
-    row.classList.remove("row-low", "row-out");
-    if (stock === 0) row.classList.add("row-out");
-    else if (stock <= 20) row.classList.add("row-low");
+  /* ── Tab switcher ── */
+  var tabs      = Array.from(document.querySelectorAll('.inv-tab'));
+  var tabPanels = Array.from(document.querySelectorAll('.inv-tab-panel'));
+  var usageLoaded   = false;
+  var servingsLoaded = false;
+
+  document.getElementById('invTabs').addEventListener('click', function (e) {
+    var btn = e.target.closest('.inv-tab');
+    if (!btn) return;
+    var name = btn.dataset.tab;
+    tabs.forEach(function (b) { b.classList.remove('active'); });
+    tabPanels.forEach(function (p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+
+    if (name === 'usage' && !usageLoaded)    { loadUsage('7'); }
+    if (name === 'servings' && !servingsLoaded) { loadServings(); }
+  });
+
+  /* ═══════════════════════════════════════
+     TAB 1: STOCK
+  ═══════════════════════════════════════ */
+  var stockRows   = Array.from(document.querySelectorAll('#stockBody tr[data-stock]'));
+  var stockSearch = document.getElementById('stockSearch');
+  var stockCount  = document.getElementById('stockCount');
+  var stockFilter = 'all';
+
+  function statusHtml(stock) {
+    if (stock === 0) return '<span class="s-pill s-out"><span class="s-dot"></span>Out</span>';
+    if (stock <= 20) return '<span class="s-pill s-low"><span class="s-dot"></span>Low</span>';
+    return '<span class="s-pill s-ok"><span class="s-dot"></span>In Stock</span>';
+  }
+
+  function updateRowStyle(row, stock) {
+    row.classList.remove('row-low', 'row-out');
+    if (stock === 0) row.classList.add('row-out');
+    else if (stock <= 20) row.classList.add('row-low');
   }
 
   function updateStats() {
-    var total = rows.length;
-    var out   = rows.filter(function(r) { return Number(r.dataset.stock) === 0; }).length;
-    var low   = rows.filter(function(r) { return Number(r.dataset.stock) <= 20; }).length;
-    statTotal.textContent = total;
-    statLow.textContent   = low;
-    statOut.textContent   = out;
+    var total = stockRows.length;
+    var out   = stockRows.filter(function (r) { return Number(r.dataset.stock) === 0; }).length;
+    var low   = stockRows.filter(function (r) { var s = Number(r.dataset.stock); return s > 0 && s <= 20; }).length;
+    var ok    = total - out - low;
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statOk').textContent    = ok;
+    document.getElementById('statLow').textContent   = low;
+    document.getElementById('statOut').textContent   = out;
   }
 
-  function applyFilters() {
-    var q = (searchEl.value || "").trim().toLowerCase();
+  function applyStockFilter() {
+    var q = (stockSearch.value || '').trim().toLowerCase();
     var visible = 0;
-    rows.forEach(function(row) {
-      var stock   = Number(row.dataset.stock || 0);
-      var name    = (row.querySelector("td")?.innerText || "").toLowerCase();
-      var filterOk =
-        activeFilter === "all" ? true :
-        activeFilter === "low" ? (stock > 0 && stock <= 20) :
-        activeFilter === "out" ? (stock === 0) : true;
-      var searchOk = name.includes(q);
-      var show = filterOk && searchOk;
-      row.style.display = show ? "" : "none";
+    stockRows.forEach(function (row) {
+      var stock = Number(row.dataset.stock || 0);
+      var name  = row.dataset.name || '';
+      var fOk =
+        stockFilter === 'all' ? true :
+        stockFilter === 'low' ? (stock > 0 && stock <= 20) :
+        stockFilter === 'out' ? (stock === 0) : true;
+      var show = fOk && name.includes(q);
+      row.style.display = show ? '' : 'none';
       if (show) visible++;
     });
-    countText.textContent = visible + " item(s) shown";
+    stockCount.textContent = visible + ' item(s) shown';
   }
 
-  filterGroup.addEventListener("click", function(e) {
-    var btn = e.target.closest("[data-filter]");
+  stockSearch.addEventListener('input', applyStockFilter);
+
+  document.getElementById('stockFilterGroup').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-f]');
     if (!btn) return;
-    activeFilter = btn.dataset.filter;
-    Array.from(filterGroup.querySelectorAll(".inv-filter-btn")).forEach(function(b) { b.classList.remove("active"); });
-    btn.classList.add("active");
-    applyFilters();
+    stockFilter = btn.dataset.f;
+    Array.from(this.querySelectorAll('.fbtn')).forEach(function (b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    applyStockFilter();
   });
 
-  searchEl.addEventListener("input", applyFilters);
-
-  resetBtn.addEventListener("click", function() {
-    searchEl.value = "";
-    activeFilter = "all";
-    Array.from(filterGroup.querySelectorAll(".inv-filter-btn")).forEach(function(b) { b.classList.remove("active"); });
-    filterGroup.querySelector('[data-filter="all"]').classList.add("active");
-    applyFilters();
-    searchEl.focus();
+  /* Sort */
+  Array.from(document.querySelectorAll('#tab-stock .inv-tbl thead th[data-col]')).forEach(function (th) {
+    th.addEventListener('click', function () {
+      var col = th.dataset.col;
+      var asc = th.dataset.asc !== 'true';
+      th.dataset.asc = asc;
+      stockRows.sort(function (a, b) {
+        var va = col === 'stock' ? Number(a.dataset.stock) : a.dataset.name;
+        var vb = col === 'stock' ? Number(b.dataset.stock) : b.dataset.name;
+        return asc ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+      });
+      var tbody = document.getElementById('stockBody');
+      stockRows.forEach(function (r) { tbody.appendChild(r); });
+      applyStockFilter();
+    });
   });
 
-  document.addEventListener("keydown", function(e) {
-    if (e.key === "/" && document.activeElement !== searchEl) {
-      e.preventDefault(); searchEl.focus();
+  /* Keyboard */
+  document.addEventListener('keydown', function (e) {
+    if (e.key === '/' && document.activeElement !== stockSearch) {
+      e.preventDefault(); stockSearch.focus();
+    }
+    if (e.key === 'Escape') {
+      document.getElementById('confirmOverlay').classList.remove('open');
     }
   });
 
-  exportBtn.addEventListener("click", function() {
-    var lines = [["Ingredient","Stock","Unit","Status"].join(",")];
-    rows.forEach(function(row) {
-      if (row.style.display === "none") return;
-      var nameEl = row.querySelector(".ing-name");
-      var unitEl = row.querySelector(".ing-unit");
-      var status = row.querySelector(".status-pill")?.innerText?.trim() || "";
-      var stock  = row.dataset.stock || "0";
-      var name   = nameEl ? nameEl.textContent.trim() : "";
-      var unit   = unitEl ? unitEl.textContent.trim() : "";
-      lines.push([name, stock, unit, status].map(function(v) { return '"' + String(v).replace(/"/g,'""') + '"'; }).join(","));
+  /* Export CSV */
+  document.getElementById('exportCsvBtn').addEventListener('click', function () {
+    var lines = [['Ingredient','Stock','Unit','Status'].join(',')];
+    stockRows.forEach(function (row) {
+      if (row.style.display === 'none') return;
+      var name   = row.querySelector('.td-name').textContent.trim();
+      var unit   = row.querySelector('.td-unit').textContent.trim();
+      var stock  = row.dataset.stock;
+      var status = row.querySelector('.s-pill').textContent.trim();
+      lines.push([name, stock, unit, status].map(function (v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(','));
     });
-    var blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    var blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
     var url  = URL.createObjectURL(blob);
-    var a    = document.createElement("a");
-    a.href = url; a.download = "inventory_export.csv"; a.click();
+    var a    = document.createElement('a');
+    a.href = url; a.download = 'inventory_export.csv'; a.click();
     URL.revokeObjectURL(url);
   });
 
-  // AJAX submit
-  invBody.addEventListener("submit", function(e) {
-    var form = e.target.closest(".inv-update-form");
+  /* AJAX update */
+  document.getElementById('stockBody').addEventListener('submit', function (e) {
+    var form = e.target.closest('.inv-update-form');
     if (!form) return;
     e.preventDefault();
 
-    var row        = form.closest("tr[data-stock]");
+    var row       = form.closest('tr[data-stock]');
     var stockInput = form.querySelector('input[name="stock"]');
     var idInput    = form.querySelector('input[name="ingredient_id"]');
-    var saveBtn    = form.querySelector(".save-btn-sm");
-    var feedback   = form.querySelector(".row-feedback");
-    var stockCell  = row?.querySelector("td:nth-child(2)");
-    var statusCell = row?.querySelector("td:nth-child(3)");
-    var unitText   = (row?.querySelector(".ing-unit")?.innerText || "").trim();
+    var saveBtn    = form.querySelector('.save-btn');
+    var fb         = form.querySelector('.row-fb');
+    var stockCell  = row.querySelector('.stock-disp');
+    var statusCell = row.querySelector('.s-pill').parentElement;
+    var unit       = row.querySelector('.td-unit').textContent.trim();
 
-    var nextStock = Number(stockInput?.value);
-    if (!Number.isInteger(nextStock) || nextStock < 0) {
-      feedback.className = "row-feedback err";
-      feedback.textContent = "Enter a valid non-negative number.";
-      return;
+    var next = Number(stockInput.value);
+    if (!Number.isInteger(next) || next < 0) {
+      fb.className = 'row-fb err'; fb.textContent = 'Invalid value'; return;
     }
 
     saveBtn.disabled = true;
-    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving';
-    feedback.className = "row-feedback";
-    feedback.textContent = "";
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    fb.className = 'row-fb'; fb.textContent = '';
 
-    var body = new URLSearchParams({ ingredient_id: idInput?.value || "", stock: String(nextStock) });
-    fetch("/inventory/update", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" }, body: body })
-      .then(function(res) { return res.json().catch(function() { return {}; }); })
-      .then(function(data) {
-        if (data.status !== "success") throw new Error(data.message || "Update failed.");
-        row.dataset.stock = String(nextStock);
-        if (stockCell) stockCell.querySelector(".stock-val").textContent = nextStock + " " + unitText;
-        if (statusCell) statusCell.innerHTML = statusHtml(nextStock);
-        updateRowClass(row, nextStock);
+    var body = new URLSearchParams({ ingredient_id: idInput.value, stock: String(next) });
+    fetch('/inventory/update', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body })
+      .then(function (r) { return r.json().catch(function () { return {}; }); })
+      .then(function (data) {
+        if (data.status !== 'success') throw new Error(data.message || 'Failed');
+        row.dataset.stock = String(next);
+        if (stockCell) stockCell.textContent = next + ' ' + unit;
+        if (statusCell) statusCell.innerHTML = statusHtml(next);
+        updateRowStyle(row, next);
         updateStats();
-        applyFilters();
-        feedback.className = "row-feedback ok";
-        feedback.textContent = "Updated ✓";
+        applyStockFilter();
+        fb.className = 'row-fb ok'; fb.textContent = 'Saved ✓';
+        toast('Stock updated', 'ok');
       })
-      .catch(function(err) {
-        feedback.className = "row-feedback err";
-        feedback.textContent = err.message || "Failed.";
+      .catch(function (err) {
+        fb.className = 'row-fb err'; fb.textContent = err.message || 'Error';
+        toast(err.message || 'Update failed', 'err');
       })
-      .finally(function() {
+      .finally(function () {
         saveBtn.disabled = false;
         saveBtn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save';
       });
   });
 
-  updateStats();
-  applyFilters();
+  /* Delete flow */
+  var pendingId   = null;
+  var pendingName = null;
+  var confirmOverlay = document.getElementById('confirmOverlay');
+  var confirmMsg     = document.getElementById('confirmMsg');
+  var confirmDelBtn  = document.getElementById('confirmDelBtn');
+  var confirmCancel  = document.getElementById('confirmCancelBtn');
+
+  document.getElementById('stockBody').addEventListener('click', function (e) {
+    var btn = e.target.closest('.del-btn');
+    if (!btn) return;
+    pendingId   = btn.dataset.id;
+    pendingName = btn.dataset.name;
+    confirmMsg.textContent = 'Delete "' + pendingName + '"? This removes it from all recipes too. Cannot be undone.';
+    confirmOverlay.classList.add('open');
+  });
+
+  confirmCancel.addEventListener('click', function () { confirmOverlay.classList.remove('open'); });
+
+  confirmDelBtn.addEventListener('click', function () {
+    if (!pendingId) return;
+    confirmDelBtn.disabled = true; confirmDelBtn.textContent = 'Deleting…';
+
+    fetch('/delete-ingredient/' + pendingId, { method: 'POST' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.status !== 'success') throw new Error(data.message);
+        var row = document.getElementById('ing-row-' + pendingId);
+        if (row) { row.remove(); stockRows = stockRows.filter(function (r) { return r.id !== 'ing-row-' + pendingId; }); }
+        stockRows = Array.from(document.querySelectorAll('#stockBody tr[data-stock]'));
+        updateStats(); applyStockFilter();
+        confirmOverlay.classList.remove('open');
+        toast('"' + pendingName + '" deleted', 'ok');
+      })
+      .catch(function (err) {
+        confirmOverlay.classList.remove('open');
+        toast(err.message || 'Delete failed', 'err');
+      })
+      .finally(function () {
+        confirmDelBtn.disabled = false; confirmDelBtn.textContent = 'Delete';
+        pendingId = null;
+      });
+  });
+
+  applyStockFilter();
+
+  /* ═══════════════════════════════════════
+     TAB 2: USAGE HISTORY
+  ═══════════════════════════════════════ */
+  var usagePeriod  = '7';
+  var cachedUsage  = [];
+
+  document.getElementById('usagePeriodGroup').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-period]');
+    if (!btn) return;
+    usagePeriod = btn.dataset.period;
+    Array.from(this.querySelectorAll('.fbtn')).forEach(function (b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    loadUsage(usagePeriod);
+  });
+
+  document.getElementById('usageSearch').addEventListener('input', function () {
+    renderUsage(cachedUsage);
+  });
+
+  function loadUsage(period) {
+    var content = document.getElementById('usageContent');
+    content.innerHTML = '<div class="state-loading"><div class="spin-ring"></div> Loading…</div>';
+    usageLoaded = true;
+
+    fetch('/inventory/usage?period=' + encodeURIComponent(period))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        cachedUsage = d.usage || [];
+        renderUsage(cachedUsage);
+      })
+      .catch(function () {
+        content.innerHTML = '<div class="state-empty"><i class="fas fa-wifi"></i><p>Failed to load usage data</p></div>';
+      });
+  }
+
+  function renderUsage(data) {
+    var q = (document.getElementById('usageSearch').value || '').trim().toLowerCase();
+    var filtered = data.filter(function (u) { return u.name.toLowerCase().includes(q); });
+    var content  = document.getElementById('usageContent');
+    var countEl  = document.getElementById('usageCount');
+
+    if (!filtered.length) {
+      content.innerHTML = '<div class="state-empty"><i class="fas fa-chart-bar"></i><p>No usage data for this period</p></div>';
+      countEl.textContent = '0 ingredients';
+      return;
+    }
+
+    var maxUsed = Math.max.apply(null, filtered.map(function (u) { return u.total_used; }));
+    countEl.textContent = filtered.length + ' ingredient(s)';
+
+    content.innerHTML = '<div class="usage-bar-wrap" style="padding:14px" id="usageBars"></div>';
+    var wrap = document.getElementById('usageBars');
+
+    filtered.forEach(function (u, idx) {
+      var pct = maxUsed > 0 ? (u.total_used / maxUsed) * 100 : 0;
+      var fillClass = pct > 70 ? 'high' : (pct > 35 ? 'med' : '');
+
+      var row = document.createElement('div');
+      row.className = 'usage-row';
+      row.style.animationDelay = (idx * 30) + 'ms';
+      row.innerHTML =
+        '<div class="usage-row-head">' +
+          '<div>' +
+            '<div class="usage-name"></div>' +
+            '<div class="usage-meta"></div>' +
+          '</div>' +
+          '<div class="usage-stats">' +
+            '<div class="usage-stat-item"><span class="usv"></span><span class="usl">total used</span></div>' +
+            '<div class="usage-stat-item"><span class="usv2"></span><span class="usl">/ order avg</span></div>' +
+            '<div class="usage-stat-item"><span class="usv3"></span><span class="usl">orders</span></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="usage-track"><div class="usage-fill ' + fillClass + '" data-pct="' + pct + '" style="width:0%"></div></div>';
+
+      row.querySelector('.usage-name').textContent  = u.name;
+      row.querySelector('.usage-meta').textContent  = u.unit;
+      row.querySelector('.usv').textContent  = u.total_used.toLocaleString() + ' ' + u.unit;
+      row.querySelector('.usv2').textContent = (u.avg_per_order || 0).toFixed(2) + ' ' + u.unit;
+      row.querySelector('.usv3').textContent = u.order_count;
+      wrap.appendChild(row);
+
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          var fill = row.querySelector('.usage-fill');
+          fill.style.width = pct + '%';
+        });
+      });
+    });
+  }
+
+  /* ═══════════════════════════════════════
+     TAB 3: ESTIMATED SERVINGS
+  ═══════════════════════════════════════ */
+  var cachedServings  = [];
+  var servingsFilter  = 'all';
+
+  document.getElementById('servingsFilterGroup').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-sf]');
+    if (!btn) return;
+    servingsFilter = btn.dataset.sf;
+    Array.from(this.querySelectorAll('.fbtn')).forEach(function (b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    renderServings(cachedServings);
+  });
+
+  document.getElementById('servingsSearch').addEventListener('input', function () {
+    renderServings(cachedServings);
+  });
+
+  document.getElementById('refreshServings').addEventListener('click', function () {
+    servingsLoaded = false; loadServings();
+  });
+
+  function loadServings() {
+    var content = document.getElementById('servingsContent');
+    content.innerHTML = '<div class="state-loading"><div class="spin-ring"></div> Calculating…</div>';
+    servingsLoaded = true;
+
+    fetch('/inventory/servings')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        cachedServings = d.servings || [];
+        renderServings(cachedServings);
+      })
+      .catch(function () {
+        content.innerHTML = '<div class="state-empty"><i class="fas fa-mug-hot"></i><p>Failed to load servings data</p></div>';
+      });
+  }
+
+  function renderServings(data) {
+    var q = (document.getElementById('servingsSearch').value || '').trim().toLowerCase();
+    var filtered = data.filter(function (p) {
+      var nameOk = p.name.toLowerCase().includes(q);
+      var filterOk =
+        servingsFilter === 'all'  ? true :
+        servingsFilter === 'zero' ? (p.max_servings === 0) :
+        servingsFilter === 'low'  ? (p.max_servings > 0 && p.max_servings <= 5) :
+        servingsFilter === 'ok'   ? (p.max_servings > 5) : true;
+      return nameOk && filterOk;
+    });
+
+    var content  = document.getElementById('servingsContent');
+    var countEl  = document.getElementById('servingsCount');
+    countEl.textContent = filtered.length + ' product(s) shown';
+
+    if (!filtered.length) {
+      content.innerHTML = '<div class="state-empty"><i class="fas fa-box-open"></i><p>No products match this filter</p></div>';
+      return;
+    }
+
+    var grid = document.createElement('div');
+    grid.className = 'prod-servings-grid';
+
+    filtered.forEach(function (p) {
+      var s   = p.max_servings;
+      var cls = s === 0 ? 'zero' : (s <= 5 ? 'low-s' : '');
+      var numCls = s === 0 ? 'zero' : (s <= 5 ? 'low' : '');
+      var card = document.createElement('div');
+      card.className = 'ps-card ' + cls;
+
+      var imgHtml = '<div class="ps-img-ph"><i class="fas fa-mug-hot"></i></div>';
+
+      card.innerHTML =
+        '<div class="ps-card-head">' +
+          imgHtml +
+          '<div><div class="ps-name"></div><div class="ps-cat"></div></div>' +
+        '</div>' +
+        '<div class="ps-servings-big">' +
+          '<div class="ps-num ' + numCls + '">' + (s === null ? '∞' : s) + '</div>' +
+          '<div class="ps-num-label">servings possible</div>' +
+        '</div>' +
+        '<div class="ps-limiting-wrap"></div>';
+
+      card.querySelector('.ps-name').textContent = p.name;
+      card.querySelector('.ps-cat').textContent  = p.category || '';
+
+      var limitWrap = card.querySelector('.ps-limiting-wrap');
+      if (p.limiting_ingredient && s !== null) {
+        limitWrap.innerHTML = '<div class="ps-limiting"><i class="fas fa-triangle-exclamation"></i><span></span></div>';
+        limitWrap.querySelector('.ps-limiting span').textContent =
+          'Limited by: ' + p.limiting_ingredient + ' (' + p.limiting_stock + ' ' + p.limiting_unit + ' left)';
+      } else if (s === null) {
+        limitWrap.innerHTML = '<div class="ps-no-recipe">No recipe defined</div>';
+      } else {
+        limitWrap.innerHTML = '<div class="ps-no-recipe" style="color:var(--success)"><i class="fas fa-circle-check"></i> Well stocked</div>';
+      }
+
+      /* Try to load product image */
+      if (p.id) {
+        var img = new Image();
+        img.onload = function () {
+          var ph = card.querySelector('.ps-img-ph');
+          if (ph) {
+            var el = document.createElement('img');
+            el.className = 'ps-img'; el.src = img.src; el.alt = p.name;
+            ph.replaceWith(el);
+          }
+        };
+        img.src = '/static/images/' + p.id + '.jpg';
+      }
+
+      grid.appendChild(card);
+    });
+
+    content.innerHTML = '';
+    content.appendChild(grid);
+  }
+
 })();
 </script>
 
