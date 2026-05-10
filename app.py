@@ -16,28 +16,25 @@ app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'brewinsight'
 
-# Image upload config
-UPLOAD_FOLDER   = os.path.join('static', 'images')
+UPLOAD_FOLDER      = os.path.join('static', 'images')
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp'}
-MAX_IMAGE_SIZE   = 5 * 1024 * 1024   # 5 MB
+MAX_IMAGE_SIZE     = 5 * 1024 * 1024
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 mysql = MySQL(app)
 
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
 def is_logged_in():
     return bool(session.get('loggedin'))
-
 
 def parse_iso_date(date_str):
     try:
         return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
     except (TypeError, ValueError):
         return None
-
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -54,11 +51,9 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute("SELECT * FROM users WHERE username=%s", (username,))
         user = cursor.fetchone()
-
         if user and check_password_hash(user['password'], password):
             session['loggedin'] = True
             session['id']       = user['id']
@@ -79,16 +74,13 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = generate_password_hash(request.form['password'])
-
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute("SELECT * FROM users WHERE username=%s", (username,))
         if cursor.fetchone():
             return redirect('/?register_error=1')
-
         cursor.execute("INSERT INTO users (username, password) VALUES (%s,%s)", (username, password))
         mysql.connection.commit()
         return redirect('/?register_success=1')
-
     return redirect('/')
 
 
@@ -207,16 +199,11 @@ def dashboard():
 
 def build_range_conditions(range_type, table_alias=None, from_date=None, to_date=None):
     col = "created_at" if not table_alias else f"{table_alias}.created_at"
-    if range_type == "all":
-        return "1=1", []
-    if range_type == "today":
-        return f"DATE({col}) = CURDATE()", []
-    if range_type == "7d":
-        return f"{col} >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)", []
-    if range_type == "30d":
-        return f"{col} >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)", []
-    if range_type == "custom":
-        return f"DATE({col}) BETWEEN %s AND %s", [from_date, to_date]
+    if range_type == "all":   return "1=1", []
+    if range_type == "today": return f"DATE({col}) = CURDATE()", []
+    if range_type == "7d":    return f"{col} >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)", []
+    if range_type == "30d":   return f"{col} >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)", []
+    if range_type == "custom":return f"DATE({col}) BETWEEN %s AND %s", [from_date, to_date]
     return "1=1", []
 
 
@@ -230,7 +217,6 @@ def analytics_filter():
     range_type = request.args.get('range', 'today')
     from_date  = request.args.get('from')
     to_date    = request.args.get('to')
-
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
     if range_type == "custom":
@@ -244,8 +230,8 @@ def analytics_filter():
             if parsed_from > parsed_to:
                 return jsonify({"error": "Start date must be before end date"}), 400
 
-    date_cond, date_params = build_range_conditions(range_type, None,  from_date, to_date)
-    sale_cond, sale_params = build_range_conditions(range_type, "s",   from_date, to_date)
+    date_cond, date_params = build_range_conditions(range_type, None, from_date, to_date)
+    sale_cond, sale_params = build_range_conditions(range_type, "s",  from_date, to_date)
 
     cursor.execute(f"SELECT COALESCE(SUM(total), 0) AS total FROM sales WHERE {date_cond}", date_params)
     total_sales = float(cursor.fetchone()['total'] or 0)
@@ -322,7 +308,6 @@ def export_csv():
             return jsonify({"error": "Invalid custom date range"}), 400
 
     date_cond, params = build_range_conditions(range_type, None, from_date, to_date)
-
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute(f"""
         SELECT created_at, customer_name, total
@@ -338,7 +323,6 @@ def export_csv():
 
     csv_data = output.getvalue()
     output.close()
-
     filename = f"sales_{range_type}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     return Response(csv_data, mimetype="text/csv",
                     headers={"Content-Disposition": f"attachment; filename={filename}"})
@@ -354,24 +338,17 @@ def live_data():
     range_type = request.args.get('range', 'today')
     from_date  = request.args.get('from')
     to_date    = request.args.get('to')
-
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     date_cond, params = build_range_conditions(range_type, None, from_date, to_date)
 
     cursor.execute(f"SELECT COALESCE(SUM(total), 0) AS total FROM sales WHERE {date_cond}", params)
     total_sales = float(cursor.fetchone()['total'] or 0)
-
     cursor.execute(f"SELECT COUNT(*) AS cnt FROM sales WHERE {date_cond}", params)
     orders_today = int(cursor.fetchone()['cnt'] or 0)
-
     cursor.execute(f"SELECT COUNT(DISTINCT customer_name) AS cnt FROM sales WHERE {date_cond}", params)
     customers_today = int(cursor.fetchone()['cnt'] or 0)
 
-    return jsonify({
-        "total_sales":     total_sales,
-        "orders_today":    orders_today,
-        "customers_today": customers_today,
-    })
+    return jsonify({"total_sales": total_sales, "orders_today": orders_today, "customers_today": customers_today})
 
 
 # ── POS ───────────────────────────────────────────────────────────────────────
@@ -386,20 +363,16 @@ def orders():
     if request.method == 'POST':
         product_id = request.form['product_id']
         quantity   = int(request.form['quantity'])
-
         cursor.execute("SELECT price FROM products WHERE id=%s", (product_id,))
         product  = cursor.fetchone()
         price    = product['price']
         subtotal = quantity * price
-
         cursor.execute("INSERT INTO sales (total, created_at) VALUES (%s, NOW())", (subtotal,))
         sale_id = cursor.lastrowid
-
         cursor.execute("""
             INSERT INTO sale_items (sale_id, product_id, quantity, price, subtotal)
             VALUES (%s,%s,%s,%s,%s)
         """, (sale_id, product_id, quantity, price, subtotal))
-
         cursor.execute("UPDATE products SET stock = stock - %s WHERE id=%s", (quantity, product_id))
         mysql.connection.commit()
         return redirect('/orders')
@@ -446,20 +419,16 @@ def submit_order():
     try:
         cursor.execute("INSERT INTO sales (customer_name,total,created_at) VALUES (%s,%s,NOW())", (customer, total))
         sale_id = cursor.lastrowid
-
         for item in cart:
             cursor.execute("""
                 INSERT INTO sale_items (sale_id,product_id,quantity,price,subtotal)
                 VALUES (%s,%s,%s,%s,%s)
             """, (sale_id, item['id'], item['qty'], item['price'], item['subtotal']))
-
             cursor.execute("UPDATE products SET stock=stock-%s WHERE id=%s", (item['qty'], item['id']))
-
             cursor.execute("SELECT ingredient_id, quantity FROM recipes WHERE product_id = %s", (item['id'],))
             for r in cursor.fetchall():
                 cursor.execute("UPDATE ingredients SET stock = stock - %s WHERE id = %s",
                                (r['quantity'] * item['qty'], r['ingredient_id']))
-
         mysql.connection.commit()
         return jsonify({"status": "success"})
     except Exception:
@@ -475,7 +444,6 @@ def view_orders():
         return redirect('/')
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-
     q         = (request.args.get('q') or '').strip()
     from_date = request.args.get('from')
     to_date   = request.args.get('to')
@@ -539,8 +507,7 @@ def view_orders():
 
     return render_template(
         'view_orders.html',
-        orders=orders,
-        total_revenue=total_revenue,
+        orders=orders, total_revenue=total_revenue,
         page=page, per_page=per_page,
         total_rows=total_rows, total_pages=total_pages,
         q=q, from_date=from_date or '', to_date=to_date or ''
@@ -577,7 +544,7 @@ def inventory():
                 flash("Stock cannot be negative.", "danger")
                 return redirect('/inventory')
         except ValueError:
-            flash("Invalid stock value. Please enter a whole number.", "danger")
+            flash("Invalid stock value.", "danger")
             return redirect('/inventory')
 
         cursor.execute("SELECT id, name FROM ingredients WHERE id = %s", (ingredient_id,))
@@ -592,7 +559,7 @@ def inventory():
             flash(f"Updated {ingredient['name']} stock to {stock}.", "success")
         except Exception:
             mysql.connection.rollback()
-            flash("Failed to update stock. Please try again.", "danger")
+            flash("Failed to update stock.", "danger")
 
         return redirect('/inventory')
 
@@ -636,17 +603,156 @@ def inventory_update():
         return jsonify({"status": "error", "message": "Failed to update stock."}), 500
 
 
+# ── INVENTORY — USAGE HISTORY ─────────────────────────────────────────────────
+
+@app.route('/inventory/usage')
+def inventory_usage():
+    if not is_logged_in():
+        return jsonify({}), 401
+
+    period = request.args.get('period', '7')
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    # Build date condition based on period
+    if period == '7':
+        date_cond = "s.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)"
+    elif period == '30':
+        date_cond = "s.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)"
+    else:
+        date_cond = "1=1"  # all time
+
+    # Total usage per ingredient — sum of (recipe.quantity × items ordered)
+    cursor.execute(f"""
+        SELECT
+            i.id,
+            i.name,
+            i.unit,
+            i.stock                                          AS current_stock,
+            COALESCE(SUM(r.quantity * si.quantity), 0)       AS total_used,
+            COUNT(DISTINCT s.id)                             AS order_count,
+            COALESCE(
+                SUM(r.quantity * si.quantity) / NULLIF(COUNT(DISTINCT s.id), 0),
+                0
+            )                                                AS avg_per_order
+        FROM ingredients i
+        LEFT JOIN recipes r      ON r.ingredient_id = i.id
+        LEFT JOIN sale_items si  ON si.product_id   = r.product_id
+        LEFT JOIN sales s        ON s.id            = si.sale_id
+            AND {date_cond}
+        GROUP BY i.id, i.name, i.unit, i.stock
+        ORDER BY total_used DESC
+    """)
+    rows = cursor.fetchall()
+
+    usage = [
+        {
+            "id":            r['id'],
+            "name":          r['name'],
+            "unit":          r['unit'],
+            "current_stock": float(r['current_stock'] or 0),
+            "total_used":    round(float(r['total_used'] or 0), 2),
+            "order_count":   int(r['order_count'] or 0),
+            "avg_per_order": round(float(r['avg_per_order'] or 0), 3),
+        }
+        for r in rows
+    ]
+
+    return jsonify({"usage": usage, "period": period})
+
+
+# ── INVENTORY — ESTIMATED SERVINGS ────────────────────────────────────────────
+
+@app.route('/inventory/servings')
+def inventory_servings():
+    if not is_logged_in():
+        return jsonify({}), 401
+
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    # Fetch all products
+    cursor.execute("SELECT id, name, category FROM products ORDER BY name ASC")
+    products = cursor.fetchall()
+
+    servings = []
+
+    for prod in products:
+        # Get recipe for this product
+        cursor.execute("""
+            SELECT r.ingredient_id, r.quantity, i.name AS ing_name, i.unit, i.stock
+            FROM recipes r
+            JOIN ingredients i ON r.ingredient_id = i.id
+            WHERE r.product_id = %s
+        """, (prod['id'],))
+        recipe = cursor.fetchall()
+
+        if not recipe:
+            # No recipe — can't calculate
+            servings.append({
+                "id":                  prod['id'],
+                "name":                prod['name'],
+                "category":            prod['category'] or '',
+                "max_servings":        None,
+                "limiting_ingredient": None,
+                "limiting_stock":      None,
+                "limiting_unit":       None,
+            })
+            continue
+
+        # Calculate max servings: floor(stock / qty_per_serving) for each ingredient
+        max_servings     = None
+        limiting_ing     = None
+        limiting_stock   = None
+        limiting_unit    = None
+
+        for r in recipe:
+            qty_per = float(r['quantity'] or 0)
+            stock   = float(r['stock']    or 0)
+
+            if qty_per <= 0:
+                continue  # skip if recipe qty is 0 (shouldn't happen but safety)
+
+            possible = int(stock / qty_per)
+
+            if max_servings is None or possible < max_servings:
+                max_servings   = possible
+                limiting_ing   = r['ing_name']
+                limiting_stock = round(stock, 2)
+                limiting_unit  = r['unit']
+
+        # If all recipe qtys were 0
+        if max_servings is None:
+            max_servings = 0
+
+        servings.append({
+            "id":                  prod['id'],
+            "name":                prod['name'],
+            "category":            prod['category'] or '',
+            "max_servings":        max_servings,
+            "limiting_ingredient": limiting_ing   if max_servings is not None else None,
+            "limiting_stock":      limiting_stock if max_servings is not None else None,
+            "limiting_unit":       limiting_unit  if max_servings is not None else None,
+        })
+
+    # Sort: 0 servings first, then low, then high
+    servings.sort(key=lambda x: (
+        0 if x['max_servings'] == 0
+        else 1 if x['max_servings'] is not None and x['max_servings'] <= 5
+        else 2 if x['max_servings'] is None
+        else 3
+    ))
+
+    return jsonify({"servings": servings})
+
+
 # ── PRODUCTS LIST ─────────────────────────────────────────────────────────────
 
 @app.route('/products')
 def products():
     if not is_logged_in():
         return redirect('/')
-
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute("SELECT * FROM products ORDER BY name ASC")
     products = cursor.fetchall()
-
     return render_template('products.html', products=products, username=session['username'])
 
 
@@ -658,18 +764,14 @@ def add_product():
         return redirect('/')
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-
-    # Always fetch ingredients for the recipe builder
     cursor.execute("SELECT id, name, unit FROM ingredients ORDER BY name ASC")
     ingredients = cursor.fetchall()
 
     if request.method == 'POST':
         name     = request.form.get('name', '').strip()
         price    = request.form.get('price', '0')
-        stock    = request.form.get('stock', '0')
         category = request.form.get('category', '').strip()
 
-        # Validation
         if not name:
             flash("Product name is required.", "danger")
             return render_template('add_product.html', ingredients=ingredients)
@@ -679,12 +781,10 @@ def add_product():
 
         try:
             price = float(price)
-            stock = int(stock)
         except ValueError:
-            flash("Invalid price or stock value.", "danger")
+            flash("Invalid price value.", "danger")
             return render_template('add_product.html', ingredients=ingredients)
 
-        # Insert product first to get the new ID
         try:
             cursor.execute(
                 "INSERT INTO products (name, price, stock, category) VALUES (%s, %s, %s, %s)",
@@ -692,65 +792,48 @@ def add_product():
             )
             mysql.connection.commit()
             product_id = cursor.lastrowid
-        except Exception as e:
+        except Exception:
             mysql.connection.rollback()
-            flash("Failed to save product. Please try again.", "danger")
+            flash("Failed to save product.", "danger")
             return render_template('add_product.html', ingredients=ingredients)
 
-        # Handle image upload — save as {product_id}.jpg
         image_file = request.files.get('image')
         if image_file and image_file.filename:
             if not allowed_file(image_file.filename):
                 flash("Invalid image format. Use JPG, PNG, or WEBP.", "warning")
             else:
-                image_file.seek(0, 2)   # seek to end
-                size = image_file.tell()
-                image_file.seek(0)      # reset
-
+                image_file.seek(0, 2); size = image_file.tell(); image_file.seek(0)
                 if size > MAX_IMAGE_SIZE:
                     flash("Image too large (max 5 MB).", "warning")
                 else:
-                    # Always save as {id}.jpg so the POS template works with existing pattern
-                    ext      = image_file.filename.rsplit('.', 1)[1].lower()
-                    filename = f"{product_id}.{ext}"
-                    save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-
+                    ext       = image_file.filename.rsplit('.', 1)[1].lower()
+                    save_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{product_id}.{ext}")
                     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
                     image_file.save(save_path)
-
-                    # If extension is not jpg, also save a .jpg copy so the POS img tag works
                     if ext != 'jpg':
                         try:
                             from PIL import Image as PILImage
                             img = PILImage.open(save_path).convert("RGB")
-                            jpg_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{product_id}.jpg")
-                            img.save(jpg_path, "JPEG", quality=90)
-                            os.remove(save_path)  # remove original non-jpg
+                            img.save(os.path.join(app.config['UPLOAD_FOLDER'], f"{product_id}.jpg"), "JPEG", quality=90)
+                            os.remove(save_path)
                         except ImportError:
-                            # Pillow not installed — just rename/keep as-is
                             pass
 
-        # Handle recipe rows
         ingredient_ids  = request.form.getlist('ingredient_id[]')
         ingredient_qtys = request.form.getlist('ingredient_qty[]')
+        recipe_errors   = []
 
-        recipe_errors = []
         for ing_id, qty in zip(ingredient_ids, ingredient_qtys):
-            ing_id = ing_id.strip()
-            qty    = qty.strip()
-            if not ing_id or not qty:
-                continue
+            ing_id = ing_id.strip(); qty = qty.strip()
+            if not ing_id or not qty: continue
             try:
                 qty_val = float(qty)
-                if qty_val <= 0:
-                    raise ValueError
+                if qty_val <= 0: raise ValueError
             except ValueError:
-                recipe_errors.append(f"Invalid quantity for ingredient ID {ing_id}")
-                continue
-
+                recipe_errors.append(f"Invalid qty for ingredient ID {ing_id}"); continue
             try:
                 cursor.execute(
-                    "INSERT INTO recipes (product_id, ingredient_id, quantity) VALUES (%s, %s, %s)",
+                    "INSERT INTO recipes (product_id, ingredient_id, quantity) VALUES (%s,%s,%s)",
                     (product_id, ing_id, qty_val)
                 )
             except Exception:
@@ -776,25 +859,24 @@ def delete_product(product_id):
         return jsonify({"status": "error", "message": "Unauthorized"}), 401
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-
     cursor.execute("SELECT name FROM products WHERE id = %s", (product_id,))
     product = cursor.fetchone()
     if not product:
         return jsonify({"status": "error", "message": "Product not found."}), 404
 
     try:
-        
-        cursor.execute("DELETE FROM recipes WHERE product_id = %s", (product_id,))
-        cursor.execute("DELETE FROM sale_items WHERE product_id = %s", (product_id,))  
-        cursor.execute("DELETE FROM products WHERE id = %s", (product_id,))
-
+        cursor.execute("DELETE FROM recipes    WHERE product_id = %s", (product_id,))
+        cursor.execute("DELETE FROM sale_items WHERE product_id = %s", (product_id,))
+        cursor.execute("DELETE FROM products   WHERE id = %s",         (product_id,))
         mysql.connection.commit()
 
-        return jsonify({"status": "success", "message": f"{product['name']} deleted"})
-    
+        for ext in ['jpg', 'jpeg', 'png', 'webp']:
+            p = os.path.join(app.config['UPLOAD_FOLDER'], f"{product_id}.{ext}")
+            if os.path.exists(p): os.remove(p)
+
+        return jsonify({"status": "success", "message": f"'{product['name']}' deleted."})
     except Exception as e:
         mysql.connection.rollback()
-        print("DELETE ERROR:", e)
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
@@ -815,37 +897,28 @@ def add_ingredient():
         stock = request.form.get('stock', '0').strip()
 
         if not name:
-            flash("Ingredient name is required.", "danger")
-            return render_template('add_ingredient.html', ingredients=ingredients)
+            flash("Ingredient name is required.", "danger"); return render_template('add_ingredient.html', ingredients=ingredients)
         if not unit:
-            flash("Unit of measurement is required.", "danger")
-            return render_template('add_ingredient.html', ingredients=ingredients)
+            flash("Unit is required.", "danger"); return render_template('add_ingredient.html', ingredients=ingredients)
 
         try:
             stock = float(stock)
-            if stock < 0:
-                raise ValueError
+            if stock < 0: raise ValueError
         except ValueError:
-            flash("Invalid stock value.", "danger")
-            return render_template('add_ingredient.html', ingredients=ingredients)
+            flash("Invalid stock value.", "danger"); return render_template('add_ingredient.html', ingredients=ingredients)
 
-        # Check for duplicate name
         cursor.execute("SELECT id FROM ingredients WHERE name = %s", (name,))
         if cursor.fetchone():
-            flash(f"Ingredient '{name}' already exists.", "warning")
-            return render_template('add_ingredient.html', ingredients=ingredients)
+            flash(f"'{name}' already exists.", "warning"); return render_template('add_ingredient.html', ingredients=ingredients)
 
         try:
-            cursor.execute(
-                "INSERT INTO ingredients (name, stock, unit) VALUES (%s, %s, %s)",
-                (name, stock, unit)
-            )
+            cursor.execute("INSERT INTO ingredients (name, stock, unit) VALUES (%s,%s,%s)", (name, stock, unit))
             mysql.connection.commit()
-            flash(f"Ingredient '{name}' added successfully!", "success")
+            flash(f"'{name}' added successfully!", "success")
             return redirect('/add-ingredient')
         except Exception:
             mysql.connection.rollback()
-            flash("Failed to save ingredient. Please try again.", "danger")
+            flash("Failed to save ingredient.", "danger")
             return render_template('add_ingredient.html', ingredients=ingredients)
 
     return render_template('add_ingredient.html', ingredients=ingredients)
@@ -865,19 +938,16 @@ def delete_ingredient(ingredient_id):
         return jsonify({"status": "error", "message": "Ingredient not found."}), 404
 
     try:
-        # Remove from recipes first
-        cursor.execute("DELETE FROM recipes WHERE ingredient_id = %s", (ingredient_id,))
-        cursor.execute("DELETE FROM ingredients WHERE id = %s", (ingredient_id,))
+        cursor.execute("DELETE FROM recipes     WHERE ingredient_id = %s", (ingredient_id,))
+        cursor.execute("DELETE FROM ingredients WHERE id = %s",            (ingredient_id,))
         mysql.connection.commit()
         return jsonify({"status": "success", "message": f"'{ingredient['name']}' deleted."})
     except Exception:
         mysql.connection.rollback()
         return jsonify({"status": "error", "message": "Failed to delete ingredient."}), 500
-    
 
 
-    # ── EDIT PRODUCT (GET) ───────────────────────────────────────────────────────
-# Add these two routes to your app.py, right after the add_product route.
+# ── EDIT PRODUCT (GET) ────────────────────────────────────────────────────────
 
 @app.route('/edit-product/<int:product_id>', methods=['GET'])
 def edit_product(product_id):
@@ -885,37 +955,25 @@ def edit_product(product_id):
         return redirect('/')
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-
-    # Fetch product
     cursor.execute("SELECT * FROM products WHERE id = %s", (product_id,))
     product = cursor.fetchone()
     if not product:
-        flash("Product not found.", "danger")
-        return redirect('/products')
+        flash("Product not found.", "danger"); return redirect('/products')
 
-    # Fetch all ingredients for the recipe builder dropdown
     cursor.execute("SELECT id, name, unit FROM ingredients ORDER BY name ASC")
     ingredients = cursor.fetchall()
 
-    # Fetch existing recipe for this product
     cursor.execute("""
-        SELECT r.ingredient_id, r.quantity, i.name as ingredient_name, i.unit
-        FROM recipes r
-        JOIN ingredients i ON r.ingredient_id = i.id
-        WHERE r.product_id = %s
-        ORDER BY i.name ASC
+        SELECT r.ingredient_id, r.quantity, i.name AS ingredient_name, i.unit
+        FROM recipes r JOIN ingredients i ON r.ingredient_id = i.id
+        WHERE r.product_id = %s ORDER BY i.name ASC
     """, (product_id,))
     recipe = cursor.fetchall()
 
-    return render_template(
-        'edit_product.html',
-        product=product,
-        ingredients=ingredients,
-        recipe=recipe
-    )
+    return render_template('edit_product.html', product=product, ingredients=ingredients, recipe=recipe)
 
 
-# ── EDIT PRODUCT (POST — save changes) ───────────────────────────────────────
+# ── EDIT PRODUCT (POST) ───────────────────────────────────────────────────────
 
 @app.route('/edit-product/<int:product_id>', methods=['POST'])
 def edit_product_save(product_id):
@@ -923,128 +981,86 @@ def edit_product_save(product_id):
         return redirect('/')
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-
-    # Make sure product exists
     cursor.execute("SELECT * FROM products WHERE id = %s", (product_id,))
     product = cursor.fetchone()
     if not product:
-        flash("Product not found.", "danger")
-        return redirect('/products')
+        flash("Product not found.", "danger"); return redirect('/products')
 
-    # ── Collect form data ──
     name     = request.form.get('name', '').strip()
     price    = request.form.get('price', '0').strip()
     category = request.form.get('category', '').strip()
 
     if not name:
-        flash("Product name is required.", "danger")
-        return redirect(f'/edit-product/{product_id}')
+        flash("Product name is required.", "danger"); return redirect(f'/edit-product/{product_id}')
     if not category:
-        flash("Please select a category.", "danger")
-        return redirect(f'/edit-product/{product_id}')
+        flash("Please select a category.", "danger"); return redirect(f'/edit-product/{product_id}')
 
     try:
         price = float(price)
     except ValueError:
-        flash("Invalid price value.", "danger")
-        return redirect(f'/edit-product/{product_id}')
+        flash("Invalid price.", "danger"); return redirect(f'/edit-product/{product_id}')
 
-    # ── Update product row ──
     try:
-        cursor.execute(
-            "UPDATE products SET name = %s, price = %s, category = %s WHERE id = %s",
-            (name, price, category, product_id)
-        )
+        cursor.execute("UPDATE products SET name=%s, price=%s, category=%s WHERE id=%s", (name, price, category, product_id))
         mysql.connection.commit()
     except Exception:
         mysql.connection.rollback()
-        flash("Failed to update product details.", "danger")
-        return redirect(f'/edit-product/{product_id}')
+        flash("Failed to update product.", "danger"); return redirect(f'/edit-product/{product_id}')
 
-    # ── Handle image replacement ──
     image_file = request.files.get('image')
     if image_file and image_file.filename:
         if not allowed_file(image_file.filename):
-            flash("Invalid image format. Use JPG, PNG, or WEBP.", "warning")
+            flash("Invalid image format.", "warning")
         else:
-            image_file.seek(0, 2)
-            size = image_file.tell()
-            image_file.seek(0)
-
+            image_file.seek(0, 2); size = image_file.tell(); image_file.seek(0)
             if size > MAX_IMAGE_SIZE:
                 flash("Image too large (max 5 MB).", "warning")
             else:
-                ext      = image_file.filename.rsplit('.', 1)[1].lower()
-                filename = f"{product_id}.{ext}"
-                save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-
+                ext       = image_file.filename.rsplit('.', 1)[1].lower()
+                save_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{product_id}.{ext}")
                 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
-                # Remove old images for this product (all extensions)
                 for old_ext in ['jpg', 'jpeg', 'png', 'webp']:
-                    old_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{product_id}.{old_ext}")
-                    if os.path.exists(old_path):
-                        os.remove(old_path)
-
+                    op = os.path.join(app.config['UPLOAD_FOLDER'], f"{product_id}.{old_ext}")
+                    if os.path.exists(op): os.remove(op)
                 image_file.save(save_path)
-
-                # Convert to JPG if not already
                 if ext != 'jpg':
                     try:
                         from PIL import Image as PILImage
                         img = PILImage.open(save_path).convert("RGB")
-                        jpg_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{product_id}.jpg")
-                        img.save(jpg_path, "JPEG", quality=90)
+                        img.save(os.path.join(app.config['UPLOAD_FOLDER'], f"{product_id}.jpg"), "JPEG", quality=90)
                         os.remove(save_path)
                     except ImportError:
-                        pass  # Pillow not installed — keep original extension
+                        pass
 
-    # ── Replace recipe rows ──
-    # We always replace all recipe rows with whatever is submitted.
-    # This is the simplest and safest approach — no partial updates.
     ingredient_ids  = request.form.getlist('ingredient_id[]')
     ingredient_qtys = request.form.getlist('ingredient_qty[]')
 
     try:
-        # Delete all existing recipe rows for this product
         cursor.execute("DELETE FROM recipes WHERE product_id = %s", (product_id,))
-
-        # Re-insert from form
         recipe_errors = []
         for ing_id, qty in zip(ingredient_ids, ingredient_qtys):
-            ing_id = ing_id.strip()
-            qty    = qty.strip()
-            if not ing_id or not qty:
-                continue
+            ing_id = ing_id.strip(); qty = qty.strip()
+            if not ing_id or not qty: continue
             try:
                 qty_val = float(qty)
-                if qty_val <= 0:
-                    raise ValueError
+                if qty_val <= 0: raise ValueError
             except ValueError:
-                recipe_errors.append(f"Invalid qty for ingredient ID {ing_id}")
-                continue
-
-            cursor.execute(
-                "INSERT INTO recipes (product_id, ingredient_id, quantity) VALUES (%s, %s, %s)",
-                (product_id, ing_id, qty_val)
-            )
-
+                recipe_errors.append(f"Invalid qty for ingredient ID {ing_id}"); continue
+            cursor.execute("INSERT INTO recipes (product_id, ingredient_id, quantity) VALUES (%s,%s,%s)", (product_id, ing_id, qty_val))
         mysql.connection.commit()
 
         if recipe_errors:
-            flash(f"Product updated, but some recipe rows had errors: {'; '.join(recipe_errors)}", "warning")
+            flash("Product updated, but some recipe rows had errors: " + "; ".join(recipe_errors), "warning")
         else:
             flash(f"'{name}' updated successfully!", "success")
-
     except Exception:
         mysql.connection.rollback()
-        flash("Product details saved, but failed to update recipe. Please try again.", "warning")
+        flash("Product details saved, but failed to update recipe.", "warning")
 
     return redirect('/products')
 
 
-
-#------------Notifications----------------------------------------
+# ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
 
 @app.route('/notifications')
 def notifications():
@@ -1055,217 +1071,105 @@ def notifications():
     items  = []
     now    = datetime.datetime.now()
 
-    # ── 1. OUT OF STOCK ingredients ──────────────────────────────────────────
-    cursor.execute("""
-        SELECT name, unit FROM ingredients
-        WHERE stock = 0
-        ORDER BY name ASC
-    """)
-    out_of_stock = cursor.fetchall()
-    for i in out_of_stock:
-        items.append({
-            "level":   "danger",
-            "title":   f"{i['name']} is OUT OF STOCK",
-            "message": f"Stock is 0 {i['unit']}. Restock immediately — orders requiring this ingredient will be blocked.",
-            "time":    "Right now"
-        })
+    cursor.execute("SELECT name, unit FROM ingredients WHERE stock = 0 ORDER BY name ASC")
+    for i in cursor.fetchall():
+        items.append({"level": "danger", "title": f"{i['name']} is OUT OF STOCK",
+                      "message": f"Stock is 0 {i['unit']}. Orders requiring this ingredient will be blocked.", "time": "Right now"})
 
-    # ── 2. CRITICALLY LOW stock (≤5) ─────────────────────────────────────────
-    cursor.execute("""
-        SELECT name, stock, unit FROM ingredients
-        WHERE stock > 0 AND stock <= 5
-        ORDER BY stock ASC
-    """)
-    critical_low = cursor.fetchall()
-    for i in critical_low:
-        items.append({
-            "level":   "danger",
-            "title":   f"{i['name']} is critically low",
-            "message": f"Only {i['stock']} {i['unit']} left. Restock before running out completely.",
-            "time":    "Right now"
-        })
+    cursor.execute("SELECT name, stock, unit FROM ingredients WHERE stock > 0 AND stock <= 5 ORDER BY stock ASC")
+    for i in cursor.fetchall():
+        items.append({"level": "danger", "title": f"{i['name']} is critically low",
+                      "message": f"Only {i['stock']} {i['unit']} left. Restock immediately.", "time": "Right now"})
 
-    # ── 3. LOW stock (6–20) ───────────────────────────────────────────────────
-    cursor.execute("""
-        SELECT name, stock, unit FROM ingredients
-        WHERE stock > 5 AND stock <= 20
-        ORDER BY stock ASC
-    """)
-    low_stock = cursor.fetchall()
-    for i in low_stock:
-        items.append({
-            "level":   "warn",
-            "title":   f"{i['name']} is running low",
-            "message": f"{i['stock']} {i['unit']} remaining. Consider restocking soon.",
-            "time":    "Right now"
-        })
+    cursor.execute("SELECT name, stock, unit FROM ingredients WHERE stock > 5 AND stock <= 20 ORDER BY stock ASC")
+    for i in cursor.fetchall():
+        items.append({"level": "warn", "title": f"{i['name']} is running low",
+                      "message": f"{i['stock']} {i['unit']} remaining. Consider restocking soon.", "time": "Right now"})
 
-    # ── 4. PRODUCTS WITH NO RECIPE ────────────────────────────────────────────
     cursor.execute("""
         SELECT p.name FROM products p
         LEFT JOIN recipes r ON p.id = r.product_id
-        WHERE r.product_id IS NULL
-        ORDER BY p.name ASC
+        WHERE r.product_id IS NULL ORDER BY p.name ASC
     """)
-    no_recipe = cursor.fetchall()
-    for p in no_recipe:
-        items.append({
-            "level":   "warn",
-            "title":   f"'{p['name']}' has no recipe",
-            "message": "This product has no ingredient recipe. Ingredient stock won't be deducted when it's ordered.",
-            "time":    "Setup issue"
-        })
+    for p in cursor.fetchall():
+        items.append({"level": "warn", "title": f"'{p['name']}' has no recipe",
+                      "message": "Ingredient stock won't be deducted when this product is ordered.", "time": "Setup issue"})
 
-    # ── 5. SLOW DAY ALERT ─────────────────────────────────────────────────────
-    # Compare today's orders to the daily average over the last 30 days
-    cursor.execute("""
-        SELECT COUNT(*) as orders_today
-        FROM sales
-        WHERE DATE(created_at) = CURDATE()
-    """)
-    orders_today = cursor.fetchone()['orders_today'] or 0
+    cursor.execute("SELECT COUNT(*) as cnt FROM sales WHERE DATE(created_at) = CURDATE()")
+    orders_today = cursor.fetchone()['cnt'] or 0
 
     cursor.execute("""
-        SELECT AVG(daily_count) as avg_orders
-        FROM (
+        SELECT AVG(daily_count) as avg FROM (
             SELECT DATE(created_at) as day, COUNT(*) as daily_count
-            FROM sales
-            WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-              AND DATE(created_at) < CURDATE()
+            FROM sales WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND DATE(created_at) < CURDATE()
             GROUP BY day
-        ) as daily_totals
+        ) t
     """)
-    avg_row    = cursor.fetchone()
-    avg_orders = float(avg_row['avg_orders'] or 0)
-
+    avg_orders = float((cursor.fetchone()['avg'] or 0))
     if avg_orders > 0 and orders_today < avg_orders * 0.5 and now.hour >= 12:
-        items.append({
-            "level":   "info",
-            "title":   "Slow day detected",
-            "message": f"Only {orders_today} orders so far today vs your {avg_orders:.0f} daily average. Consider a promotion or check if anything is unavailable.",
-            "time":    f"As of {now.strftime('%I:%M %p')}"
-        })
+        items.append({"level": "info", "title": "Slow day detected",
+                      "message": f"Only {orders_today} orders vs your {avg_orders:.0f} daily average.", "time": now.strftime('%I:%M %p')})
 
-    # ── 6. PEAK HOUR ALERT ────────────────────────────────────────────────────
-    # Check if the current hour is historically the busiest
-    current_hour = now.hour
     cursor.execute("""
-        SELECT HOUR(created_at) as hour, COUNT(*) as total
-        FROM sales
+        SELECT HOUR(created_at) as hour, COUNT(*) as total FROM sales
         WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-        GROUP BY hour
-        ORDER BY total DESC
-        LIMIT 1
+        GROUP BY hour ORDER BY total DESC LIMIT 1
     """)
     peak_row = cursor.fetchone()
-    if peak_row and peak_row['hour'] == current_hour:
-        hour_label = now.strftime("%I %p").lstrip("0")
-        items.append({
-            "level":   "success",
-            "title":   f"You're in your peak hour ({hour_label})",
-            "message": "This is historically your busiest hour. Make sure stock and staff are ready.",
-            "time":    now.strftime("%I:%M %p")
-        })
+    if peak_row and peak_row['hour'] == now.hour:
+        items.append({"level": "success", "title": f"Peak hour now ({now.strftime('%I %p').lstrip('0')})",
+                      "message": "Historically your busiest hour. Ensure stock and staff are ready.", "time": now.strftime('%I:%M %p')})
 
-    # ── 7. TOP SELLER TODAY ───────────────────────────────────────────────────
     cursor.execute("""
-        SELECT p.name, SUM(si.quantity) as total_sold
-        FROM sale_items si
-        JOIN products p ON si.product_id = p.id
-        JOIN sales s ON si.sale_id = s.id
-        WHERE DATE(s.created_at) = CURDATE()
-        GROUP BY p.name
-        ORDER BY total_sold DESC
-        LIMIT 1
+        SELECT p.name, SUM(si.quantity) as total_sold FROM sale_items si
+        JOIN products p ON si.product_id = p.id JOIN sales s ON si.sale_id = s.id
+        WHERE DATE(s.created_at) = CURDATE() GROUP BY p.name ORDER BY total_sold DESC LIMIT 1
     """)
-    top_seller = cursor.fetchone()
-    if top_seller and top_seller['total_sold']:
-        items.append({
-            "level":   "tip",
-            "title":   f"Top seller today: {top_seller['name']}",
-            "message": f"Sold {top_seller['total_sold']} unit(s) so far. Make sure ingredients for this product are well stocked.",
-            "time":    f"As of {now.strftime('%I:%M %p')}"
-        })
+    top = cursor.fetchone()
+    if top and top['total_sold']:
+        items.append({"level": "tip", "title": f"Top seller today: {top['name']}",
+                      "message": f"Sold {top['total_sold']} unit(s). Keep ingredients stocked.", "time": now.strftime('%I:%M %p')})
 
-    # ── 8. NO SALES TODAY (late in the day) ───────────────────────────────────
     if orders_today == 0 and now.hour >= 10:
-        items.append({
-            "level":   "info",
-            "title":   "No orders yet today",
-            "message": "No sales have been recorded today. If the store is open, check if the POS is working correctly.",
-            "time":    f"As of {now.strftime('%I:%M %p')}"
-        })
+        items.append({"level": "info", "title": "No orders yet today",
+                      "message": "No sales recorded today. Check if the POS is working correctly.", "time": now.strftime('%I:%M %p')})
 
-    # ── 9. REVENUE MILESTONE ──────────────────────────────────────────────────
-    cursor.execute("SELECT COALESCE(SUM(total), 0) as total FROM sales WHERE DATE(created_at) = CURDATE()")
-    today_revenue = float(cursor.fetchone()['total'] or 0)
-
+    cursor.execute("SELECT COALESCE(SUM(total),0) as t FROM sales WHERE DATE(created_at) = CURDATE()")
+    today_rev = float(cursor.fetchone()['t'] or 0)
     cursor.execute("""
-        SELECT AVG(daily_total) as avg_revenue
-        FROM (
-            SELECT DATE(created_at) as day, SUM(total) as daily_total
-            FROM sales
-            WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-              AND DATE(created_at) < CURDATE()
+        SELECT AVG(daily_total) as avg FROM (
+            SELECT DATE(created_at) as day, SUM(total) as daily_total FROM sales
+            WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND DATE(created_at) < CURDATE()
             GROUP BY day
-        ) as daily_rev
+        ) t
     """)
-    avg_rev_row = cursor.fetchone()
-    avg_revenue = float(avg_rev_row['avg_revenue'] or 0)
+    avg_rev = float((cursor.fetchone()['avg'] or 0))
+    if avg_rev > 0 and today_rev >= avg_rev * 1.5:
+        items.append({"level": "success", "title": "Strong sales day! 🎉",
+                      "message": f"Revenue ₱{today_rev:,.2f} is {(today_rev/avg_rev*100-100):.0f}% above your daily average.", "time": now.strftime('%I:%M %p')})
 
-    if avg_revenue > 0 and today_revenue >= avg_revenue * 1.5:
-        items.append({
-            "level":   "success",
-            "title":   "Strong sales day! 🎉",
-            "message": f"Today's revenue ₱{today_revenue:,.2f} is {(today_revenue/avg_revenue*100 - 100):.0f}% above your daily average. Great work!",
-            "time":    f"As of {now.strftime('%I:%M %p')}"
-        })
-
-    # ── 10. PRODUCTS WITH LOW INGREDIENT STOCK (can make < 5 servings) ────────
     cursor.execute("SELECT id, name FROM products")
-    all_products = cursor.fetchall()
-
-    for prod in all_products:
+    for prod in cursor.fetchall():
         cursor.execute("""
-            SELECT r.quantity, i.stock, i.name as ing_name, i.unit
-            FROM recipes r
-            JOIN ingredients i ON r.ingredient_id = i.id
-            WHERE r.product_id = %s
+            SELECT r.quantity, i.stock, i.name as ing_name, i.unit FROM recipes r
+            JOIN ingredients i ON r.ingredient_id = i.id WHERE r.product_id = %s
         """, (prod['id'],))
-        recipe_items = cursor.fetchall()
+        recipe = cursor.fetchall()
+        if not recipe: continue
+        max_s = None; lim = None
+        for r in recipe:
+            if float(r['quantity'] or 0) > 0:
+                p = int(float(r['stock']) / float(r['quantity']))
+                if max_s is None or p < max_s: max_s = p; lim = r
+        if max_s is not None and 0 < max_s <= 5:
+            items.append({"level": "warn", "title": f"'{prod['name']}' can only be made {max_s}×",
+                          "message": f"Limited by {lim['ing_name']} ({lim['stock']} {lim['unit']} left).", "time": "Right now"})
+        elif max_s == 0:
+            items.append({"level": "danger", "title": f"'{prod['name']}' CANNOT be made",
+                          "message": f"{lim['ing_name']} has {lim['stock']} {lim['unit']} — not enough for 1 serving.", "time": "Right now"})
 
-        if not recipe_items:
-            continue  # already caught by no-recipe check
-
-        # How many servings can we make?
-        max_servings = None
-        limiting_ing = None
-        for r in recipe_items:
-            if r['quantity'] > 0:
-                possible = int(float(r['stock']) / float(r['quantity']))
-                if max_servings is None or possible < max_servings:
-                    max_servings = possible
-                    limiting_ing = r
-
-        if max_servings is not None and 0 < max_servings <= 5:
-            items.append({
-                "level":   "warn",
-                "title":   f"'{prod['name']}' can only be made {max_servings}x",
-                "message": f"Limited by {limiting_ing['ing_name']} ({limiting_ing['stock']} {limiting_ing['unit']} left). Restock to keep selling this product.",
-                "time":    "Right now"
-            })
-        elif max_servings == 0:
-            items.append({
-                "level":   "danger",
-                "title":   f"'{prod['name']}' CANNOT be made",
-                "message": f"Ingredients are depleted — {limiting_ing['ing_name']} has {limiting_ing['stock']} {limiting_ing['unit']} left, not enough for even 1 serving.",
-                "time":    "Right now"
-            })
-
-    # Sort: danger first, then warn, then others
     level_order = {"danger": 0, "warn": 1, "info": 2, "tip": 3, "success": 4}
     items.sort(key=lambda x: level_order.get(x["level"], 5))
-
     return jsonify({"notifications": items})
 
 
