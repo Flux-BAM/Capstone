@@ -92,106 +92,243 @@ def dashboard():
         return redirect('/')
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    today  = datetime.date.today()
 
-    cursor.execute("SELECT COALESCE(SUM(total), 0) as total FROM sales")
-    total_sales = cursor.fetchone()['total'] or 0
+    # ── Base KPIs (all time) ──────────────────────────────────────────────────
+    cursor.execute("SELECT COALESCE(SUM(total),0) AS t FROM sales")
+    total_sales = float(cursor.fetchone()['t'] or 0)
 
+    cursor.execute("SELECT COUNT(*) AS c FROM sales")
+    total_customers = int(cursor.fetchone()['c'] or 0)
+
+    cursor.execute("SELECT COALESCE(AVG(total),0) AS a FROM sales")
+    avg_order_value = float(cursor.fetchone()['a'] or 0)
+
+    # ── Today KPIs ────────────────────────────────────────────────────────────
+    cursor.execute("SELECT COUNT(*) AS c FROM sales WHERE DATE(created_at)=CURDATE()")
+    orders_today = int(cursor.fetchone()['c'] or 0)
+
+    cursor.execute("SELECT COUNT(DISTINCT customer_name) AS c FROM sales WHERE DATE(created_at)=CURDATE()")
+    customers_today = int(cursor.fetchone()['c'] or 0)
+
+    cursor.execute("SELECT COALESCE(SUM(total),0) AS t FROM sales WHERE DATE(created_at)=CURDATE()")
+    revenue_today = float(cursor.fetchone()['t'] or 0)
+
+    # ── Period-over-period deltas (today vs yesterday) ────────────────────────
+    cursor.execute("SELECT COALESCE(SUM(total),0) AS t FROM sales WHERE DATE(created_at)=CURDATE()-INTERVAL 1 DAY")
+    revenue_yesterday = float(cursor.fetchone()['t'] or 0)
+
+    cursor.execute("SELECT COUNT(*) AS c FROM sales WHERE DATE(created_at)=CURDATE()-INTERVAL 1 DAY")
+    orders_yesterday = int(cursor.fetchone()['c'] or 0)
+
+    cursor.execute("SELECT COUNT(DISTINCT customer_name) AS c FROM sales WHERE DATE(created_at)=CURDATE()-INTERVAL 1 DAY")
+    customers_yesterday = int(cursor.fetchone()['c'] or 0)
+
+    def pct_change(now, prev):
+        if prev == 0:
+            return None
+        return round(((now - prev) / prev) * 100, 1)
+
+    deltas = {
+        "revenue":   pct_change(revenue_today,   revenue_yesterday),
+        "orders":    pct_change(orders_today,     orders_yesterday),
+        "customers": pct_change(customers_today,  customers_yesterday),
+    }
+
+    # ── Daily sales (last 30 days) ────────────────────────────────────────────
     cursor.execute("""
         SELECT DATE(created_at) AS day, SUM(total) AS total
-        FROM sales GROUP BY DATE(created_at) ORDER BY day
+        FROM sales WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        GROUP BY DATE(created_at) ORDER BY day
     """)
-    daily_sales_rows = cursor.fetchall()
     daily_sales = [
         {"day": str(r["day"]), "label": r["day"].strftime("%b %d"), "total": float(r["total"] or 0)}
-        for r in daily_sales_rows
+        for r in cursor.fetchall()
     ]
 
+    # ── Weekly + monthly summaries ────────────────────────────────────────────
     cursor.execute("""
-        SELECT p.name, SUM(si.quantity) as total_sold
-        FROM sale_items si JOIN products p ON si.product_id = p.id
-        GROUP BY p.name
-    """)
-    product_data = cursor.fetchall()
-
-    cursor.execute("""
-        SELECT HOUR(created_at) as hour, COUNT(*) as total
-        FROM sales GROUP BY hour ORDER BY hour
-    """)
-    peak_hours = cursor.fetchall() or []
-
-    cursor.execute("""
-        SELECT DATE_FORMAT(created_at, '%Y-%m') as month, SUM(total) as total
+        SELECT DATE_FORMAT(created_at,'%Y-%m') AS month, SUM(total) AS total
         FROM sales GROUP BY month ORDER BY month
     """)
     monthly_sales = cursor.fetchall()
 
     cursor.execute("""
-        SELECT YEAR(created_at) as year, WEEK(created_at, 1) as week_number, SUM(total) as total
-        FROM sales GROUP BY year, week_number ORDER BY year, week_number
+        SELECT YEAR(created_at) AS yr, WEEK(created_at,1) AS wk, SUM(total) AS total
+        FROM sales GROUP BY yr,wk ORDER BY yr,wk
     """)
-    weekly_sales_raw = cursor.fetchall()
-
     weekly_sales = []
-    for w in weekly_sales_raw:
-        year  = w['year']
-        week  = w['week_number']
-        total = w['total']
-        monday     = datetime.date.fromisocalendar(year, week, 1)
-        sunday     = datetime.date.fromisocalendar(year, week, 7)
-        week_range = f"{monday.strftime('%b %d')} - {sunday.strftime('%b %d')}"
-        weekly_sales.append({"week_range": week_range, "total": total})
+    for w in cursor.fetchall():
+        try:
+            mon = datetime.date.fromisocalendar(w['yr'], w['wk'], 1)
+            sun = datetime.date.fromisocalendar(w['yr'], w['wk'], 7)
+            weekly_sales.append({"week_range": f"{mon.strftime('%b %d')} – {sun.strftime('%b %d')}", "total": float(w['total'] or 0)})
+        except Exception:
+            pass
 
+    # ── Product data ──────────────────────────────────────────────────────────
     cursor.execute("""
-        SELECT p.name, SUM(si.quantity) as total_sold
-        FROM sale_items si JOIN products p ON si.product_id = p.id
-        JOIN sales s ON si.sale_id = s.id
-        WHERE DATE(s.created_at) = CURDATE()
+        SELECT p.name, SUM(si.quantity) AS total_sold
+        FROM sale_items si JOIN products p ON si.product_id=p.id
+        JOIN sales s ON si.sale_id=s.id
+        GROUP BY p.name ORDER BY total_sold DESC
+    """)
+    product_data = [{'name': r['name'], 'total_sold': int(r['total_sold'] or 0)} for r in cursor.fetchall()]
+
+    # ── Best sellers today ────────────────────────────────────────────────────
+    cursor.execute("""
+        SELECT p.name, SUM(si.quantity) AS total_sold
+        FROM sale_items si JOIN products p ON si.product_id=p.id
+        JOIN sales s ON si.sale_id=s.id
+        WHERE DATE(s.created_at)=CURDATE()
         GROUP BY p.name ORDER BY total_sold DESC LIMIT 5
     """)
     best_sellers_today = cursor.fetchall()
 
+    # ── Recent orders ─────────────────────────────────────────────────────────
     cursor.execute("""
-        SELECT s.customer_name, p.name as product_name, si.subtotal
-        FROM sales s JOIN sale_items si ON s.id = si.sale_id
-        JOIN products p ON si.product_id = p.id
+        SELECT s.customer_name, p.name AS product_name, si.subtotal
+        FROM sales s JOIN sale_items si ON s.id=si.sale_id
+        JOIN products p ON si.product_id=p.id
         ORDER BY s.created_at DESC LIMIT 5
     """)
     recent_orders = cursor.fetchall()
 
+    # ── Peak hours ────────────────────────────────────────────────────────────
     cursor.execute("""
-        SELECT name, stock, unit FROM ingredients
-        WHERE stock <= 20 ORDER BY stock ASC LIMIT 5
+        SELECT HOUR(created_at) AS hour, COUNT(*) AS total
+        FROM sales GROUP BY hour ORDER BY hour
     """)
+    peak_hours = [{'hour': int(r['hour']), 'total': int(r['total'])} for r in cursor.fetchall()]
+
+    # ── Low stock ─────────────────────────────────────────────────────────────
+    cursor.execute("SELECT name, stock, unit FROM ingredients WHERE stock<=20 ORDER BY stock ASC LIMIT 8")
     low_stock = cursor.fetchall()
 
-    cursor.execute("SELECT COUNT(*) as total_customers FROM sales")
-    total_customers = cursor.fetchone()['total_customers'] or 0
+    # ── 7-day sales forecast (trailing 14-day average projected forward) ──────
+    cursor.execute("""
+        SELECT DATE(created_at) AS day, SUM(total) AS total
+        FROM sales
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)
+          AND DATE(created_at) < CURDATE()
+        GROUP BY DATE(created_at)
+    """)
+    trailing = cursor.fetchall()
+    if trailing:
+        avg_daily = sum(float(r['total'] or 0) for r in trailing) / len(trailing)
+    else:
+        avg_daily = 0
 
-    cursor.execute("SELECT COUNT(*) as orders_today FROM sales WHERE DATE(created_at) = CURDATE()")
-    orders_today = cursor.fetchone()['orders_today'] or 0
+    forecast = []
+    for i in range(1, 8):
+        d = today + datetime.timedelta(days=i)
+        forecast.append({"day": d.strftime("%b %d"), "projected": round(avg_daily, 2)})
 
-    cursor.execute("SELECT COUNT(DISTINCT customer_name) as customers_today FROM sales WHERE DATE(created_at) = CURDATE()")
-    customers_today = cursor.fetchone()['customers_today'] or 0
+    # ── Day-of-week heatmap (last 8 weeks) ───────────────────────────────────
+    cursor.execute("""
+        SELECT DAYOFWEEK(created_at) AS dow,
+               HOUR(created_at)     AS hr,
+               COUNT(*)             AS cnt
+        FROM sales
+        WHERE created_at >= DATE_SUB(NOW(), INTERVAL 8 WEEK)
+        GROUP BY dow, hr
+        ORDER BY dow, hr
+    """)
+    heatmap_raw = cursor.fetchall()
+    heatmap = [{'dow': int(r['dow']), 'hr': int(r['hr']), 'cnt': int(r['cnt'])} for r in heatmap_raw]
 
-    cursor.execute("SELECT COALESCE(AVG(total), 0) as avg_order_value FROM sales")
-    avg_order_value = cursor.fetchone()['avg_order_value'] or 0
+    # ── Repeat vs new customers (last 30 days) ────────────────────────────────
+    cursor.execute("""
+        SELECT customer_name, COUNT(*) AS visits
+        FROM sales
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+          AND customer_name IS NOT NULL AND customer_name != ''
+        GROUP BY customer_name
+    """)
+    cust_rows = cursor.fetchall()
+    repeat_customers = sum(1 for r in cust_rows if int(r['visits']) > 1)
+    new_customers    = sum(1 for r in cust_rows if int(r['visits']) == 1)
+    total_named      = repeat_customers + new_customers
+
+    # ── Slow-moving products (zero sales last 14 days) ────────────────────────
+    cursor.execute("""
+        SELECT p.name FROM products p
+        WHERE p.id NOT IN (
+            SELECT DISTINCT si.product_id FROM sale_items si
+            JOIN sales s ON si.sale_id=s.id
+            WHERE s.created_at >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)
+        )
+        ORDER BY p.name
+    """)
+    slow_movers = [r['name'] for r in cursor.fetchall()]
+
+    # ── Estimated days until stockout per ingredient ──────────────────────────
+    cursor.execute("""
+        SELECT i.id, i.name, i.stock, i.unit,
+               COALESCE(SUM(r.quantity * si.quantity),0) AS used_14d
+        FROM ingredients i
+        LEFT JOIN recipes r     ON r.ingredient_id=i.id
+        LEFT JOIN sale_items si ON si.product_id=r.product_id
+        LEFT JOIN sales s       ON s.id=si.sale_id
+            AND s.created_at >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)
+        GROUP BY i.id, i.name, i.stock, i.unit
+        HAVING i.stock > 0
+        ORDER BY i.stock ASC
+    """)
+    stockout_rows = cursor.fetchall()
+    stockout_est = []
+    for r in stockout_rows:
+        used = float(r['used_14d'] or 0)
+        daily_use = used / 14 if used > 0 else 0
+        days_left = round(float(r['stock']) / daily_use) if daily_use > 0 else None
+        stockout_est.append({
+            "name":      r['name'],
+            "stock":     float(r['stock']),
+            "unit":      r['unit'],
+            "daily_use": round(daily_use, 2),
+            "days_left": days_left,
+        })
+    stockout_est.sort(key=lambda x: (x['days_left'] is None, x['days_left'] or 9999))
+
+    # ── Revenue by category (all time) ───────────────────────────────────────
+    cursor.execute("""
+        SELECT p.category, SUM(si.subtotal) AS revenue
+        FROM sale_items si JOIN products p ON si.product_id=p.id
+        WHERE p.category IS NOT NULL AND p.category != ''
+        GROUP BY p.category ORDER BY revenue DESC
+    """)
+    category_revenue = [{'category': r['category'], 'revenue': float(r['revenue'] or 0)} for r in cursor.fetchall()]
 
     return render_template(
         'dashboard.html',
         username=session['username'],
+        # base KPIs
         total_sales=total_sales,
-        product_data=product_data,
+        total_customers=total_customers,
+        avg_order_value=avg_order_value,
+        orders_today=orders_today,
+        customers_today=customers_today,
+        revenue_today=revenue_today,
+        deltas=deltas,
+        # charts
         daily_sales=daily_sales,
         monthly_sales=monthly_sales,
         weekly_sales=weekly_sales,
+        product_data=product_data,
         peak_hours=peak_hours,
+        category_revenue=category_revenue,
+        # lists
         best_sellers_today=best_sellers_today,
-        total_customers=total_customers,
-        orders_today=orders_today,
-        customers_today=customers_today,
-        avg_order_value=avg_order_value,
         recent_orders=recent_orders,
-        low_stock=low_stock
+        low_stock=low_stock,
+        # new decision data
+        forecast=forecast,
+        heatmap=heatmap,
+        repeat_customers=repeat_customers,
+        new_customers=new_customers,
+        total_named=total_named,
+        slow_movers=slow_movers,
+        stockout_est=stockout_est,
     )
 
 
@@ -226,22 +363,65 @@ def analytics_filter():
             parsed_from = parse_iso_date(from_date)
             parsed_to   = parse_iso_date(to_date)
             if not parsed_from or not parsed_to:
-                return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+                return jsonify({"error": "Invalid date format"}), 400
             if parsed_from > parsed_to:
                 return jsonify({"error": "Start date must be before end date"}), 400
 
     date_cond, date_params = build_range_conditions(range_type, None, from_date, to_date)
     sale_cond, sale_params = build_range_conditions(range_type, "s",  from_date, to_date)
 
-    cursor.execute(f"SELECT COALESCE(SUM(total), 0) AS total FROM sales WHERE {date_cond}", date_params)
-    total_sales = float(cursor.fetchone()['total'] or 0)
+    # ── Core metrics ──────────────────────────────────────────────────────────
+    cursor.execute(f"SELECT COALESCE(SUM(total),0) AS t FROM sales WHERE {date_cond}", date_params)
+    total_sales = float(cursor.fetchone()['t'] or 0)
 
-    cursor.execute(f"SELECT COUNT(*) AS cnt FROM sales WHERE {date_cond}", date_params)
-    orders_today = int(cursor.fetchone()['cnt'] or 0)
+    cursor.execute(f"SELECT COUNT(*) AS c FROM sales WHERE {date_cond}", date_params)
+    orders_today = int(cursor.fetchone()['c'] or 0)
 
-    cursor.execute(f"SELECT COUNT(DISTINCT customer_name) AS cnt FROM sales WHERE {date_cond}", date_params)
-    customers_today = int(cursor.fetchone()['cnt'] or 0)
+    cursor.execute(f"SELECT COUNT(DISTINCT customer_name) AS c FROM sales WHERE {date_cond}", date_params)
+    customers_today = int(cursor.fetchone()['c'] or 0)
 
+    cursor.execute(f"SELECT COALESCE(AVG(total),0) AS a FROM sales WHERE {date_cond}", date_params)
+    avg_order = float(cursor.fetchone()['a'] or 0)
+
+    # ── Period-over-period (previous equal window) ────────────────────────────
+    def prev_condition(range_type, from_date, to_date):
+        if range_type == "today":
+            return "DATE(created_at) = CURDATE() - INTERVAL 1 DAY", []
+        if range_type == "7d":
+            return "created_at BETWEEN DATE_SUB(CURDATE(), INTERVAL 14 DAY) AND DATE_SUB(CURDATE(), INTERVAL 7 DAY)", []
+        if range_type == "30d":
+            return "created_at BETWEEN DATE_SUB(CURDATE(), INTERVAL 60 DAY) AND DATE_SUB(CURDATE(), INTERVAL 30 DAY)", []
+        if range_type == "custom" and from_date and to_date:
+            try:
+                f = datetime.datetime.strptime(from_date, "%Y-%m-%d").date()
+                t = datetime.datetime.strptime(to_date,   "%Y-%m-%d").date()
+                delta = (t - f).days + 1
+                prev_to   = f - datetime.timedelta(days=1)
+                prev_from = prev_to - datetime.timedelta(days=delta - 1)
+                return "DATE(created_at) BETWEEN %s AND %s", [str(prev_from), str(prev_to)]
+            except Exception:
+                pass
+        return "1=0", []  # all-time has no prev
+
+    prev_cond, prev_params = prev_condition(range_type, from_date, to_date)
+    cursor.execute(f"SELECT COALESCE(SUM(total),0) AS t FROM sales WHERE {prev_cond}", prev_params)
+    prev_revenue = float(cursor.fetchone()['t'] or 0)
+    cursor.execute(f"SELECT COUNT(*) AS c FROM sales WHERE {prev_cond}", prev_params)
+    prev_orders = int(cursor.fetchone()['c'] or 0)
+    cursor.execute(f"SELECT COUNT(DISTINCT customer_name) AS c FROM sales WHERE {prev_cond}", prev_params)
+    prev_customers = int(cursor.fetchone()['c'] or 0)
+
+    def pct(now, prev):
+        if prev == 0: return None
+        return round(((now - prev) / prev) * 100, 1)
+
+    deltas = {
+        "revenue":   pct(total_sales,    prev_revenue),
+        "orders":    pct(orders_today,   prev_orders),
+        "customers": pct(customers_today, prev_customers),
+    }
+
+    # ── Charts ────────────────────────────────────────────────────────────────
     cursor.execute(f"""
         SELECT DATE(created_at) AS day, SUM(total) AS total
         FROM sales WHERE {date_cond}
@@ -254,10 +434,8 @@ def analytics_filter():
 
     cursor.execute(f"""
         SELECT p.name, SUM(si.quantity) AS total_sold
-        FROM sale_items si
-        JOIN products p ON si.product_id = p.id
-        JOIN sales s ON si.sale_id = s.id
-        WHERE {sale_cond}
+        FROM sale_items si JOIN products p ON si.product_id=p.id
+        JOIN sales s ON si.sale_id=s.id WHERE {sale_cond}
         GROUP BY p.name ORDER BY total_sold DESC
     """, sale_params)
     product_data = [{'name': r['name'], 'total_sold': int(r['total_sold'] or 0)} for r in cursor.fetchall()]
@@ -270,23 +448,45 @@ def analytics_filter():
     peak_hours = [{'hour': int(r['hour']), 'total': int(r['total'])} for r in cursor.fetchall()]
 
     cursor.execute(f"""
+        SELECT p.category, SUM(si.subtotal) AS revenue
+        FROM sale_items si JOIN products p ON si.product_id=p.id
+        JOIN sales s ON si.sale_id=s.id WHERE {sale_cond}
+          AND p.category IS NOT NULL AND p.category != ''
+        GROUP BY p.category ORDER BY revenue DESC
+    """, sale_params)
+    category_revenue = [{'category': r['category'], 'revenue': float(r['revenue'] or 0)} for r in cursor.fetchall()]
+
+    cursor.execute(f"""
         SELECT p.name, SUM(si.quantity) AS total_sold
-        FROM sale_items si
-        JOIN products p ON si.product_id = p.id
-        JOIN sales s ON si.sale_id = s.id
-        WHERE {sale_cond}
+        FROM sale_items si JOIN products p ON si.product_id=p.id
+        JOIN sales s ON si.sale_id=s.id WHERE {sale_cond}
         GROUP BY p.name ORDER BY total_sold DESC LIMIT 5
     """, sale_params)
     best_sellers = [{'name': r['name'], 'total_sold': int(r['total_sold'] or 0)} for r in cursor.fetchall()]
 
+    # ── Repeat vs new (within range) ─────────────────────────────────────────
+    cursor.execute(f"""
+        SELECT customer_name, COUNT(*) AS visits FROM sales
+        WHERE {date_cond} AND customer_name IS NOT NULL AND customer_name != ''
+        GROUP BY customer_name
+    """, date_params)
+    cust_rows = cursor.fetchall()
+    repeat_customers = sum(1 for r in cust_rows if int(r['visits']) > 1)
+    new_customers    = sum(1 for r in cust_rows if int(r['visits']) == 1)
+
     return jsonify({
-        "total_sales":     total_sales,
-        "orders_today":    orders_today,
-        "customers_today": customers_today,
-        "daily_sales":     daily_sales,
-        "product_data":    product_data,
-        "peak_hours":      peak_hours,
-        "best_sellers":    best_sellers,
+        "total_sales":       total_sales,
+        "orders_today":      orders_today,
+        "customers_today":   customers_today,
+        "avg_order":         round(avg_order, 2),
+        "deltas":            deltas,
+        "daily_sales":       daily_sales,
+        "product_data":      product_data,
+        "peak_hours":        peak_hours,
+        "category_revenue":  category_revenue,
+        "best_sellers":      best_sellers,
+        "repeat_customers":  repeat_customers,
+        "new_customers":     new_customers,
     })
 
 
