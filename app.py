@@ -98,7 +98,9 @@ def dashboard():
     cursor.execute("SELECT COALESCE(SUM(total),0) AS t FROM sales")
     total_sales = float(cursor.fetchone()['t'] or 0)
 
-    cursor.execute("SELECT COUNT(*) AS c FROM sales")
+    # FIX #2: Use COUNT(DISTINCT customer_name) so this reflects unique customers,
+    # not total order rows.
+    cursor.execute("SELECT COUNT(DISTINCT customer_name) AS c FROM sales WHERE customer_name IS NOT NULL AND customer_name != ''")
     total_customers = int(cursor.fetchone()['c'] or 0)
 
     cursor.execute("SELECT COALESCE(AVG(total),0) AS a FROM sales")
@@ -113,6 +115,11 @@ def dashboard():
 
     cursor.execute("SELECT COALESCE(SUM(total),0) AS t FROM sales WHERE DATE(created_at)=CURDATE()")
     revenue_today = float(cursor.fetchone()['t'] or 0)
+
+    # FIX #3: Compute avg_order_value scoped to today so the KPI strip is
+    # consistent with the default "Today" filter on page load.
+    cursor.execute("SELECT COALESCE(AVG(total),0) AS a FROM sales WHERE DATE(created_at)=CURDATE()")
+    avg_order_value_today = float(cursor.fetchone()['a'] or 0)
 
     # ── Period-over-period deltas (today vs yesterday) ────────────────────────
     cursor.execute("SELECT COALESCE(SUM(total),0) AS t FROM sales WHERE DATE(created_at)=CURDATE()-INTERVAL 1 DAY")
@@ -153,6 +160,8 @@ def dashboard():
     """)
     monthly_sales = cursor.fetchall()
 
+    # FIX #6: Wrap fromisocalendar in a specific ValueError/AttributeError catch
+    # and log the offending row instead of silently swallowing it.
     cursor.execute("""
         SELECT YEAR(created_at) AS yr, WEEK(created_at,1) AS wk, SUM(total) AS total
         FROM sales GROUP BY yr,wk ORDER BY yr,wk
@@ -160,11 +169,14 @@ def dashboard():
     weekly_sales = []
     for w in cursor.fetchall():
         try:
-            mon = datetime.date.fromisocalendar(w['yr'], w['wk'], 1)
-            sun = datetime.date.fromisocalendar(w['yr'], w['wk'], 7)
-            weekly_sales.append({"week_range": f"{mon.strftime('%b %d')} – {sun.strftime('%b %d')}", "total": float(w['total'] or 0)})
-        except Exception:
-            pass
+            mon = datetime.date.fromisocalendar(int(w['yr']), int(w['wk']), 1)
+            sun = datetime.date.fromisocalendar(int(w['yr']), int(w['wk']), 7)
+            weekly_sales.append({
+                "week_range": f"{mon.strftime('%b %d')} – {sun.strftime('%b %d')}",
+                "total": float(w['total'] or 0)
+            })
+        except (ValueError, AttributeError) as e:
+            app.logger.warning(f"weekly_sales skip yr={w.get('yr')} wk={w.get('wk')}: {e}")
 
     # ── Product data ──────────────────────────────────────────────────────────
     cursor.execute("""
@@ -225,6 +237,9 @@ def dashboard():
         forecast.append({"day": d.strftime("%b %d"), "projected": round(avg_daily, 2)})
 
     # ── Day-of-week heatmap (last 8 weeks) ───────────────────────────────────
+    # FIX #5: MySQL DAYOFWEEK returns 1=Sunday … 7=Saturday.  The JS heatmap
+    # renderer uses DAYS[d] where d runs 1–7 with DAYS[1]="Sun" … DAYS[7]="Sat",
+    # so the mapping is now consistent end-to-end.  No transformation needed here.
     cursor.execute("""
         SELECT DAYOFWEEK(created_at) AS dow,
                HOUR(created_at)     AS hr,
@@ -302,26 +317,23 @@ def dashboard():
     return render_template(
         'dashboard.html',
         username=session['username'],
-        # base KPIs
         total_sales=total_sales,
         total_customers=total_customers,
         avg_order_value=avg_order_value,
+        avg_order_value_today=avg_order_value_today,   # FIX #3: added
         orders_today=orders_today,
         customers_today=customers_today,
         revenue_today=revenue_today,
         deltas=deltas,
-        # charts
         daily_sales=daily_sales,
         monthly_sales=monthly_sales,
         weekly_sales=weekly_sales,
         product_data=product_data,
         peak_hours=peak_hours,
         category_revenue=category_revenue,
-        # lists
         best_sellers_today=best_sellers_today,
         recent_orders=recent_orders,
         low_stock=low_stock,
-        # new decision data
         forecast=forecast,
         heatmap=heatmap,
         repeat_customers=repeat_customers,
@@ -336,11 +348,11 @@ def dashboard():
 
 def build_range_conditions(range_type, table_alias=None, from_date=None, to_date=None):
     col = "created_at" if not table_alias else f"{table_alias}.created_at"
-    if range_type == "all":   return "1=1", []
-    if range_type == "today": return f"DATE({col}) = CURDATE()", []
-    if range_type == "7d":    return f"{col} >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)", []
-    if range_type == "30d":   return f"{col} >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)", []
-    if range_type == "custom":return f"DATE({col}) BETWEEN %s AND %s", [from_date, to_date]
+    if range_type == "all":    return "1=1", []
+    if range_type == "today":  return f"DATE({col}) = CURDATE()", []
+    if range_type == "7d":     return f"{col} >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)", []
+    if range_type == "30d":    return f"{col} >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)", []
+    if range_type == "custom": return f"DATE({col}) BETWEEN %s AND %s", [from_date, to_date]
     return "1=1", []
 
 
@@ -380,6 +392,8 @@ def analytics_filter():
     cursor.execute(f"SELECT COUNT(DISTINCT customer_name) AS c FROM sales WHERE {date_cond}", date_params)
     customers_today = int(cursor.fetchone()['c'] or 0)
 
+    # FIX #3: avg_order is now scoped to the selected range, matching the
+    # range-aware label shown in the frontend KPI strip.
     cursor.execute(f"SELECT COALESCE(AVG(total),0) AS a FROM sales WHERE {date_cond}", date_params)
     avg_order = float(cursor.fetchone()['a'] or 0)
 
@@ -416,22 +430,39 @@ def analytics_filter():
         return round(((now - prev) / prev) * 100, 1)
 
     deltas = {
-        "revenue":   pct(total_sales,    prev_revenue),
-        "orders":    pct(orders_today,   prev_orders),
+        "revenue":   pct(total_sales,     prev_revenue),
+        "orders":    pct(orders_today,    prev_orders),
         "customers": pct(customers_today, prev_customers),
     }
 
-    # ── Charts ────────────────────────────────────────────────────────────────
-    cursor.execute(f"""
-        SELECT DATE(created_at) AS day, SUM(total) AS total
-        FROM sales WHERE {date_cond}
-        GROUP BY DATE(created_at) ORDER BY day
-    """, date_params)
+    # ── Daily sales chart ─────────────────────────────────────────────────────
+    if range_type == "all":
+        cursor.execute("""
+            SELECT DATE_FORMAT(created_at, '%Y-%m-01') AS day,
+                   DATE_FORMAT(created_at, '%b %Y')    AS label,
+                   SUM(total) AS total
+            FROM sales
+            GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+            ORDER BY day
+        """)
+    else:
+        cursor.execute(f"""
+            SELECT DATE(created_at) AS day, SUM(total) AS total
+            FROM sales WHERE {date_cond}
+            GROUP BY DATE(created_at) ORDER BY day
+        """, date_params)
+
+    daily_rows = cursor.fetchall()
     daily_sales = [
-        {"day": str(r["day"]), "label": r["day"].strftime("%b %d"), "total": float(r["total"] or 0)}
-        for r in cursor.fetchall()
+        {
+            "day":   str(r["day"]),
+            "label": r["label"] if "label" in r else r["day"].strftime("%b %d"),
+            "total": float(r["total"] or 0),
+        }
+        for r in daily_rows
     ]
 
+    # ── Product data ──────────────────────────────────────────────────────────
     cursor.execute(f"""
         SELECT p.name, SUM(si.quantity) AS total_sold
         FROM sale_items si JOIN products p ON si.product_id=p.id
@@ -440,6 +471,7 @@ def analytics_filter():
     """, sale_params)
     product_data = [{'name': r['name'], 'total_sold': int(r['total_sold'] or 0)} for r in cursor.fetchall()]
 
+    # ── Peak hours ────────────────────────────────────────────────────────────
     cursor.execute(f"""
         SELECT HOUR(created_at) AS hour, COUNT(*) AS total
         FROM sales WHERE {date_cond}
@@ -447,6 +479,7 @@ def analytics_filter():
     """, date_params)
     peak_hours = [{'hour': int(r['hour']), 'total': int(r['total'])} for r in cursor.fetchall()]
 
+    # ── Category revenue ──────────────────────────────────────────────────────
     cursor.execute(f"""
         SELECT p.category, SUM(si.subtotal) AS revenue
         FROM sale_items si JOIN products p ON si.product_id=p.id
@@ -456,6 +489,7 @@ def analytics_filter():
     """, sale_params)
     category_revenue = [{'category': r['category'], 'revenue': float(r['revenue'] or 0)} for r in cursor.fetchall()]
 
+    # ── Best sellers ──────────────────────────────────────────────────────────
     cursor.execute(f"""
         SELECT p.name, SUM(si.quantity) AS total_sold
         FROM sale_items si JOIN products p ON si.product_id=p.id
@@ -475,18 +509,18 @@ def analytics_filter():
     new_customers    = sum(1 for r in cust_rows if int(r['visits']) == 1)
 
     return jsonify({
-        "total_sales":       total_sales,
-        "orders_today":      orders_today,
-        "customers_today":   customers_today,
-        "avg_order":         round(avg_order, 2),
-        "deltas":            deltas,
-        "daily_sales":       daily_sales,
-        "product_data":      product_data,
-        "peak_hours":        peak_hours,
-        "category_revenue":  category_revenue,
-        "best_sellers":      best_sellers,
-        "repeat_customers":  repeat_customers,
-        "new_customers":     new_customers,
+        "total_sales":      total_sales,
+        "orders_today":     orders_today,
+        "customers_today":  customers_today,
+        "avg_order":        round(avg_order, 2),
+        "deltas":           deltas,
+        "daily_sales":      daily_sales,
+        "product_data":     product_data,
+        "peak_hours":       peak_hours,
+        "category_revenue": category_revenue,
+        "best_sellers":     best_sellers,
+        "repeat_customers": repeat_customers,
+        "new_customers":    new_customers,
     })
 
 
@@ -813,15 +847,13 @@ def inventory_usage():
     period = request.args.get('period', '7')
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-    # Build date condition based on period
     if period == '7':
         date_cond = "s.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)"
     elif period == '30':
         date_cond = "s.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)"
     else:
-        date_cond = "1=1"  # all time
+        date_cond = "1=1"
 
-    # Total usage per ingredient — sum of (recipe.quantity × items ordered)
     cursor.execute(f"""
         SELECT
             i.id,
@@ -868,15 +900,12 @@ def inventory_servings():
         return jsonify({}), 401
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-
-    # Fetch all products
     cursor.execute("SELECT id, name, category FROM products ORDER BY name ASC")
     products = cursor.fetchall()
 
     servings = []
 
     for prod in products:
-        # Get recipe for this product
         cursor.execute("""
             SELECT r.ingredient_id, r.quantity, i.name AS ing_name, i.unit, i.stock
             FROM recipes r
@@ -886,7 +915,6 @@ def inventory_servings():
         recipe = cursor.fetchall()
 
         if not recipe:
-            # No recipe — can't calculate
             servings.append({
                 "id":                  prod['id'],
                 "name":                prod['name'],
@@ -898,28 +926,23 @@ def inventory_servings():
             })
             continue
 
-        # Calculate max servings: floor(stock / qty_per_serving) for each ingredient
-        max_servings     = None
-        limiting_ing     = None
-        limiting_stock   = None
-        limiting_unit    = None
+        max_servings   = None
+        limiting_ing   = None
+        limiting_stock = None
+        limiting_unit  = None
 
         for r in recipe:
             qty_per = float(r['quantity'] or 0)
             stock   = float(r['stock']    or 0)
-
             if qty_per <= 0:
-                continue  # skip if recipe qty is 0 (shouldn't happen but safety)
-
+                continue
             possible = int(stock / qty_per)
-
             if max_servings is None or possible < max_servings:
                 max_servings   = possible
                 limiting_ing   = r['ing_name']
                 limiting_stock = round(stock, 2)
                 limiting_unit  = r['unit']
 
-        # If all recipe qtys were 0
         if max_servings is None:
             max_servings = 0
 
@@ -933,7 +956,6 @@ def inventory_servings():
             "limiting_unit":       limiting_unit  if max_servings is not None else None,
         })
 
-    # Sort: 0 servings first, then low, then high
     servings.sort(key=lambda x: (
         0 if x['max_servings'] == 0
         else 1 if x['max_servings'] is not None and x['max_servings'] <= 5
@@ -1097,19 +1119,23 @@ def add_ingredient():
         stock = request.form.get('stock', '0').strip()
 
         if not name:
-            flash("Ingredient name is required.", "danger"); return render_template('add_ingredient.html', ingredients=ingredients)
+            flash("Ingredient name is required.", "danger")
+            return render_template('add_ingredient.html', ingredients=ingredients)
         if not unit:
-            flash("Unit is required.", "danger"); return render_template('add_ingredient.html', ingredients=ingredients)
+            flash("Unit is required.", "danger")
+            return render_template('add_ingredient.html', ingredients=ingredients)
 
         try:
             stock = float(stock)
             if stock < 0: raise ValueError
         except ValueError:
-            flash("Invalid stock value.", "danger"); return render_template('add_ingredient.html', ingredients=ingredients)
+            flash("Invalid stock value.", "danger")
+            return render_template('add_ingredient.html', ingredients=ingredients)
 
         cursor.execute("SELECT id FROM ingredients WHERE name = %s", (name,))
         if cursor.fetchone():
-            flash(f"'{name}' already exists.", "warning"); return render_template('add_ingredient.html', ingredients=ingredients)
+            flash(f"'{name}' already exists.", "warning")
+            return render_template('add_ingredient.html', ingredients=ingredients)
 
         try:
             cursor.execute("INSERT INTO ingredients (name, stock, unit) VALUES (%s,%s,%s)", (name, stock, unit))
@@ -1158,7 +1184,8 @@ def edit_product(product_id):
     cursor.execute("SELECT * FROM products WHERE id = %s", (product_id,))
     product = cursor.fetchone()
     if not product:
-        flash("Product not found.", "danger"); return redirect('/products')
+        flash("Product not found.", "danger")
+        return redirect('/products')
 
     cursor.execute("SELECT id, name, unit FROM ingredients ORDER BY name ASC")
     ingredients = cursor.fetchall()
@@ -1184,28 +1211,33 @@ def edit_product_save(product_id):
     cursor.execute("SELECT * FROM products WHERE id = %s", (product_id,))
     product = cursor.fetchone()
     if not product:
-        flash("Product not found.", "danger"); return redirect('/products')
+        flash("Product not found.", "danger")
+        return redirect('/products')
 
     name     = request.form.get('name', '').strip()
     price    = request.form.get('price', '0').strip()
     category = request.form.get('category', '').strip()
 
     if not name:
-        flash("Product name is required.", "danger"); return redirect(f'/edit-product/{product_id}')
+        flash("Product name is required.", "danger")
+        return redirect(f'/edit-product/{product_id}')
     if not category:
-        flash("Please select a category.", "danger"); return redirect(f'/edit-product/{product_id}')
+        flash("Please select a category.", "danger")
+        return redirect(f'/edit-product/{product_id}')
 
     try:
         price = float(price)
     except ValueError:
-        flash("Invalid price.", "danger"); return redirect(f'/edit-product/{product_id}')
+        flash("Invalid price.", "danger")
+        return redirect(f'/edit-product/{product_id}')
 
     try:
         cursor.execute("UPDATE products SET name=%s, price=%s, category=%s WHERE id=%s", (name, price, category, product_id))
         mysql.connection.commit()
     except Exception:
         mysql.connection.rollback()
-        flash("Failed to update product.", "danger"); return redirect(f'/edit-product/{product_id}')
+        flash("Failed to update product.", "danger")
+        return redirect(f'/edit-product/{product_id}')
 
     image_file = request.files.get('image')
     if image_file and image_file.filename:
@@ -1246,7 +1278,10 @@ def edit_product_save(product_id):
                 if qty_val <= 0: raise ValueError
             except ValueError:
                 recipe_errors.append(f"Invalid qty for ingredient ID {ing_id}"); continue
-            cursor.execute("INSERT INTO recipes (product_id, ingredient_id, quantity) VALUES (%s,%s,%s)", (product_id, ing_id, qty_val))
+            cursor.execute(
+                "INSERT INTO recipes (product_id, ingredient_id, quantity) VALUES (%s,%s,%s)",
+                (product_id, ing_id, qty_val)
+            )
         mysql.connection.commit()
 
         if recipe_errors:

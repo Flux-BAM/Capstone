@@ -27,7 +27,7 @@
 html{scroll-behavior:smooth}
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
 
-/* ══ TOPBAR ══════════════════════════════════════════ */
+/* ══ TOPBAR ══ */
 .topbar{position:sticky;top:0;z-index:50;background:rgba(15,14,12,.97);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
 .tb-inner{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 22px}
 .brand{display:flex;align-items:center;gap:9px}
@@ -65,10 +65,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .re{font-size:10px;color:var(--danger);font-family:var(--mono);display:none}
 .re.visible{display:inline-block}
 
-/* ══ PAGE ══════════════════════════════════════════ */
+/* ══ PAGE ══ */
 .page{padding:18px 22px;display:flex;flex-direction:column;gap:0}
 
-/* ══ KPI STRIP ══════════════════════════════════════════ */
+/* ══ KPI STRIP ══ */
 .kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border-radius:var(--r);overflow:hidden;border:1px solid var(--border);margin-bottom:14px}
 .kpi{background:var(--bg2);padding:13px 15px;transition:background .18s}
 .kpi:hover{background:var(--bg3)}
@@ -82,14 +82,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .delta.dn{background:rgba(212,96,96,.12);color:var(--danger)}
 .delta.nt{background:var(--bg4);color:var(--muted)}
 
-/* ══ SECTION — collapsible ══════════════════════════════════════════ */
+/* ══ SECTION ══ */
 .section{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:10px}
-.section-hd{
-  display:flex;align-items:center;gap:0;
-  background:var(--bg2);cursor:pointer;
-  user-select:none;transition:background .15s;
-  border-bottom:1px solid transparent;
-}
+.section-hd{display:flex;align-items:center;gap:0;background:var(--bg2);cursor:pointer;user-select:none;transition:background .15s;border-bottom:1px solid transparent}
 .section-hd:hover{background:var(--bg3)}
 .section-hd.open{border-bottom-color:var(--border)}
 .sh-left{display:flex;align-items:center;gap:10px;flex:1;padding:11px 14px}
@@ -109,7 +104,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 @keyframes fadeIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
 .sb-pad{padding:14px}
 
-/* ══ TABS ══════════════════════════════════════════ */
+/* ══ TABS ══ */
 .tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--bg2)}
 .tab{font-size:11px;font-family:var(--font);font-weight:500;padding:9px 15px;border:none;background:transparent;color:var(--muted2);cursor:pointer;position:relative;transition:.15s;white-space:nowrap}
 .tab:hover{color:var(--text)}
@@ -118,8 +113,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .tab-panels{padding:14px}
 .tab-panel{display:none}
 .tab-panel.active{display:block}
-
-/* ══ INNER TABS (summary) ══════════════════════════════════════════ */
 .itabs{display:flex;gap:3px;margin-bottom:10px}
 .itab{font-size:10.5px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted2);cursor:pointer;font-family:var(--font);transition:.15s}
 .itab.active{background:var(--accent);color:var(--bg);border-color:var(--accent)}
@@ -129,23 +122,24 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .sr .sd{color:var(--muted2);font-family:var(--mono)}
 .sr .sa{color:var(--accent);font-weight:600;font-family:var(--mono)}
 
-/* ══ GRIDS ══════════════════════════════════════════ */
+/* ══ GRIDS ══ */
 .g2{display:grid;grid-template-columns:2fr 1fr;gap:12px;align-items:start}
 .g2e{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
 .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-items:start}
 .g2r{display:grid;grid-template-columns:1fr 2fr;gap:12px;align-items:start}
 
-/* ══ CARD (inner) ══════════════════════════════════════════ */
+/* ══ CARD ══ */
 .card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:13px}
-.ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:6px;flex-wrap:wrap}
 .ct{font-size:11.5px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px}
 .ct i{color:var(--accent);font-size:10.5px}
 .cs{font-size:10px;color:var(--muted);font-family:var(--mono)}
-.cpills{display:flex;gap:3px}
+.cpills{display:flex;gap:3px;flex-wrap:wrap}
 .cpill{font-size:9.5px;padding:2px 7px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--muted2);cursor:pointer;font-family:var(--font);transition:.15s}
 .cpill.active{background:var(--accent-bg);color:var(--accent);border-color:rgba(212,169,106,.3)}
+.cpill.hidden{display:none}
 
-/* ══ PRODUCT BARS ══════════════════════════════════════════ */
+/* ══ PRODUCT BARS ══ */
 .pb-wrap{display:flex;flex-direction:column;gap:6px}
 .pb-row{display:grid;grid-template-columns:88px 1fr 36px;align-items:center;gap:8px}
 .pb-lbl{font-size:10px;color:var(--muted2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right;font-family:var(--mono)}
@@ -157,7 +151,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .empty{text-align:center;padding:18px 0;font-size:11px;color:var(--muted)}
 .empty i{display:block;font-size:17px;margin-bottom:5px;color:var(--border2)}
 
-/* ══ LIST ITEMS ══════════════════════════════════════════ */
+/* ══ LIST ITEMS ══ */
 .li{display:flex;align-items:center;gap:7px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11.5px}
 .li:last-child{border-bottom:none}
 .lrank{width:14px;font-size:9px;color:var(--muted);font-family:var(--mono);flex-shrink:0}
@@ -169,7 +163,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .qty{font-size:10.5px;font-weight:600;font-family:var(--mono)}
 .qty.c{color:var(--danger)}.qty.g{color:var(--success)}
 
-/* ══ DONUT ══════════════════════════════════════════ */
+/* ══ DONUT ══ */
 .dw{display:flex;align-items:center;gap:14px}
 .dl{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}
 .dlr{display:flex;align-items:center;gap:6px;font-size:11px}
@@ -177,7 +171,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .dll{color:var(--muted2);flex:1;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dlv{font-family:var(--mono);font-weight:600;color:var(--text);font-size:11px;white-space:nowrap}
 
-/* ══ HEATMAP ══════════════════════════════════════════ */
+/* ══ HEATMAP ══ */
 .hm-scroll{overflow-x:auto}
 .hm-grid{display:grid;grid-template-columns:34px repeat(24,1fr);gap:2px;min-width:520px}
 .hm-rl{font-size:8px;color:var(--muted);font-family:var(--mono);display:flex;align-items:center;justify-content:flex-end;padding-right:4px;height:18px}
@@ -186,14 +180,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .hm-c:hover .hm-t{display:block}
 .hm-t{display:none;position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--bg4);border:1px solid var(--border3);border-radius:5px;padding:4px 7px;font-size:10px;color:var(--text);font-family:var(--mono);white-space:nowrap;z-index:20;pointer-events:none}
 
-/* ══ FORECAST ══════════════════════════════════════════ */
+/* ══ FORECAST ══ */
 .fc-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .fc-d{background:var(--bg4);border:1px solid var(--border);border-radius:var(--rs);padding:9px 6px;text-align:center}
 .fc-d .fc-l{font-size:8.5px;color:var(--muted);font-family:var(--mono);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
 .fc-d .fc-v{font-size:11.5px;font-weight:600;color:var(--accent2);font-family:var(--mono)}
 .fc-d .fc-n{font-size:8.5px;color:var(--muted);margin-top:3px}
 
-/* ══ STOCKOUT TABLE ══════════════════════════════════════════ */
+/* ══ STOCKOUT TABLE ══ */
 .sot{width:100%;border-collapse:collapse;font-size:11.5px}
 .sot th{font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;padding:0 8px 7px;text-align:left;white-space:nowrap}
 .sot th:last-child{text-align:right}
@@ -206,12 +200,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .br{background:rgba(212,96,96,.1);color:var(--danger);border:1px solid rgba(212,96,96,.18)}
 .bm{background:var(--bg5);color:var(--muted2);border:1px solid var(--border2)}
 
-/* ══ ALERTS ══════════════════════════════════════════ */
+/* ══ ALERTS ══ */
 #loginAlert{position:fixed;top:12px;right:12px;z-index:9999;padding:9px 13px;font-size:12.5px;background:var(--bg3);border:1px solid var(--accent);color:var(--accent2);border-radius:var(--rs);box-shadow:0 8px 24px rgba(0,0,0,.45)}
 #toast{position:fixed;right:16px;bottom:20px;z-index:9999;padding:8px 13px;font-size:11px;font-family:var(--mono);background:var(--bg3);border:1px solid var(--border2);color:var(--accent2);border-radius:var(--rs);opacity:0;pointer-events:none;transition:opacity .2s;box-shadow:0 8px 24px rgba(0,0,0,.45)}
 .card.loading{pointer-events:none;opacity:.55}
 
-/* ══ RESPONSIVE ══════════════════════════════════════════ */
+/* ══ RESPONSIVE ══ */
 @media(max-width:1100px){.kpi-strip{grid-template-columns:repeat(3,1fr)}.g2,.g2r,.g2e{grid-template-columns:1fr}}
 @media(max-width:900px){.kpi-strip{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr 1fr}.fc-strip{grid-template-columns:repeat(4,1fr)}}
 @media(max-width:640px){.kpi-strip{grid-template-columns:1fr}.g3{grid-template-columns:1fr}.fc-strip{grid-template-columns:repeat(2,1fr)}.tabs{overflow-x:auto}}
@@ -265,12 +259,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <div class="kpi-val" id="totalSales">₱ {{ "%.2f"|format(revenue_today|float) }}</div>
       <div class="kpi-foot">
         <span class="kpi-sub" id="totalSalesSub">Today</span>
-        <!-- FIX 1: stable wrapper spans so innerHTML updates work after first filter -->
         <span id="deltaRevenue"><span class="delta {% if deltas.revenue is not none %}{% if deltas.revenue >= 0 %}up{% else %}dn{% endif %}{% else %}nt{% endif %}">{% if deltas.revenue is not none %}{% if deltas.revenue >= 0 %}▲{% else %}▼{% endif %}{{ deltas.revenue|abs }}%{% else %}—{% endif %}</span></span>
       </div>
     </div>
     <div class="kpi">
       <div class="kpi-lbl"><i class="fas fa-users"></i> Total Customers</div>
+      <!-- FIX #2: total_customers now reflects COUNT(DISTINCT customer_name) from the backend -->
       <div class="kpi-val">{{ total_customers }}</div>
       <div class="kpi-foot"><span class="kpi-sub">All time</span></div>
     </div>
@@ -279,7 +273,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <div class="kpi-val" id="customersToday">{{ customers_today }}</div>
       <div class="kpi-foot">
         <span class="kpi-sub" id="customersSub">Today</span>
-        <!-- FIX 1: stable wrapper span -->
         <span id="deltaCustomers"><span class="delta {% if deltas.customers is not none %}{% if deltas.customers >= 0 %}up{% else %}dn{% endif %}{% else %}nt{% endif %}">{% if deltas.customers is not none %}{% if deltas.customers >= 0 %}▲{% else %}▼{% endif %}{{ deltas.customers|abs }}%{% else %}—{% endif %}</span></span>
       </div>
     </div>
@@ -288,14 +281,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <div class="kpi-val" id="ordersToday">{{ orders_today }}</div>
       <div class="kpi-foot">
         <span class="kpi-sub" id="ordersSub">Today</span>
-        <!-- FIX 1: stable wrapper span -->
         <span id="deltaOrders"><span class="delta {% if deltas.orders is not none %}{% if deltas.orders >= 0 %}up{% else %}dn{% endif %}{% else %}nt{% endif %}">{% if deltas.orders is not none %}{% if deltas.orders >= 0 %}▲{% else %}▼{% endif %}{{ deltas.orders|abs }}%{% else %}—{% endif %}</span></span>
       </div>
     </div>
     <div class="kpi">
       <div class="kpi-lbl"><i class="fas fa-receipt"></i> Avg Order</div>
-      <div class="kpi-val" id="avgOrder">₱ {{ "%.2f"|format(avg_order_value|float) }}</div>
-      <div class="kpi-foot"><span class="kpi-sub" id="avgOrderSub">Per transaction</span></div>
+      <!-- FIX #3: avg_order_value now rendered with range-aware label; initial label matches "Today" -->
+      <div class="kpi-val" id="avgOrder">₱ {{ "%.2f"|format(avg_order_value_today|float) }}</div>
+      <div class="kpi-foot"><span class="kpi-sub" id="avgOrderSub">Today</span></div>
     </div>
   </div>
 
@@ -315,7 +308,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <i class="fas fa-chevron-down sh-chevron open" id="chev-sales"></i>
     </div>
     <div class="section-body open" id="body-sales">
-      <!-- FIX 4: data-panels attribute links tab bar to its panels container -->
       <div class="tabs" id="tabs-sales" data-panels="panels-sales">
         <button class="tab active" data-tab="sales-overview">Overview</button>
         <button class="tab" data-tab="sales-products">Products</button>
@@ -328,19 +320,24 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
           <div class="g2">
             <div class="card" id="salesCard">
               <div class="ch">
-                <div class="ct"><i class="fas fa-chart-area"></i> Daily Sales</div>
-                <div style="display:flex;align-items:center;gap:8px">
-                  <div class="cpills">
+                <div class="ct"><i class="fas fa-chart-area"></i> <span id="chartTitle">Daily Sales</span></div>
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                  <div class="cpills" id="chartTypePills">
                     <button class="cpill active" data-type="line">Line</button>
                     <button class="cpill" data-type="bar">Bar</button>
+                  </div>
+                  <div class="cpills" id="chartGranPills" style="display:none">
+                    <button class="cpill active" data-gran="monthly">Monthly</button>
+                    <button class="cpill" data-gran="yearly">Yearly</button>
                   </div>
                   <span class="cs" id="chartRangeLabel">Today</span>
                 </div>
               </div>
               <canvas id="salesChart" height="120"></canvas>
-              <script id="dailySalesData" type="application/json">{{ daily_sales | tojson }}</script>
+              <script id="dailySalesData"  type="application/json">{{ daily_sales   | tojson }}</script>
+              <script id="monthlySalesData" type="application/json">{{ monthly_sales | tojson }}</script>
+              <script id="weeklySalesData"  type="application/json">{{ weekly_sales  | tojson }}</script>
             </div>
-            <!-- Best Sellers + Recent Orders stacked -->
             <div style="display:flex;flex-direction:column;gap:10px">
               <div class="card">
                 <div class="ch"><div class="ct"><i class="fas fa-trophy" style="color:#d4a040"></i> Best Sellers</div><span class="cs" id="bsSub">Today</span></div>
@@ -388,7 +385,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
           <div class="g2r">
             <div class="card" id="peakCard">
               <div class="ch"><div class="ct"><i class="fas fa-clock"></i> Peak Hours</div><span class="cs">Customers / hour</span></div>
-              <canvas id="peakChart" height="140"></canvas>
+              <!-- FIX #8: wrapper div used to replace canvas cleanly on chart rebuild -->
+              <div id="peakChartWrap"><canvas id="peakChart" height="140"></canvas></div>
             </div>
             <div class="card">
               <div class="ch"><div class="ct"><i class="fas fa-table-cells"></i> Day × Hour Heatmap</div><span class="cs">Last 8 weeks</span></div>
@@ -398,9 +396,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
           </div>
         </div>
 
-      </div><!-- /tab-panels -->
-    </div><!-- /body-sales -->
-  </div><!-- /sec-sales -->
+      </div>
+    </div>
+  </div>
 
   <!-- ══ SECTION 2 · CUSTOMERS ══ -->
   <div class="section" id="sec-customers">
@@ -458,11 +456,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <!-- ══ SECTION 3 · INVENTORY HEALTH ══ -->
   {% set valid_stockout = stockout_est | rejectattr('days_left', 'equalto', none) | list if stockout_est else [] %}
   {% set critical_count = valid_stockout | selectattr('days_left', 'le', 3) | list | length %}
-  {% set warn_count = valid_stockout
-      | selectattr('days_left', 'gt', 3)
-      | selectattr('days_left', 'le', 7)
-      | list
-      | length %}
+  {% set warn_count = valid_stockout | selectattr('days_left', 'gt', 3) | selectattr('days_left', 'le', 7) | list | length %}
   <div class="section" id="sec-inventory">
     <div class="section-hd" data-section="inventory">
       <div class="sh-left">
@@ -481,15 +475,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <i class="fas fa-chevron-down sh-chevron" id="chev-inventory"></i>
     </div>
     <div class="section-body" id="body-inventory">
-      <!-- FIX 4: data-panels attribute -->
       <div class="tabs" id="tabs-inventory" data-panels="panels-inventory">
         <button class="tab active" data-tab="inv-stockout">Stockout Timeline</button>
         <button class="tab" data-tab="inv-lowstock">Low Stock</button>
         <button class="tab" data-tab="inv-slowmovers">Slow Movers</button>
       </div>
       <div class="tab-panels" id="panels-inventory">
-
-        <!-- Stockout -->
         <div class="tab-panel active" id="inv-stockout">
           {% if stockout_est %}
           <table class="sot">
@@ -512,8 +503,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
           </table>
           {% else %}<div class="empty"><i class="fas fa-box-open"></i>No stock data</div>{% endif %}
         </div>
-
-        <!-- Low Stock -->
         <div class="tab-panel" id="inv-lowstock">
           {% for i in low_stock %}
           <div class="li" style="padding:7px 0">
@@ -523,8 +512,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
           </div>
           {% else %}<div class="empty"><i class="fas fa-check-circle" style="color:var(--success)"></i>All stocks good</div>{% endfor %}
         </div>
-
-        <!-- Slow Movers -->
         <div class="tab-panel" id="inv-slowmovers">
           {% if slow_movers %}
           <p style="font-size:11px;color:var(--muted);margin-bottom:10px">Products with zero sales in the last 14 days:</p>
@@ -535,7 +522,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
           </div>
           {% else %}<div class="empty"><i class="fas fa-check-circle" style="color:var(--success)"></i>All products selling</div>{% endif %}
         </div>
-
       </div>
     </div>
   </div>
@@ -544,7 +530,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div class="section" id="sec-summary">
     <div class="section-hd" data-section="summary">
       <div class="sh-left">
-        <div class="sh-icon" style="background:rgba(107,157,212,.1);color:var(--info,#6b9dd4)"><i class="fas fa-table-list"></i></div>
+        <div class="sh-icon" style="background:rgba(107,157,212,.1);color:#6b9dd4"><i class="fas fa-table-list"></i></div>
         <div>
           <div class="sh-title">Sales Summary</div>
           <div class="sh-desc">Daily, weekly and monthly revenue breakdown</div>
@@ -557,7 +543,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
     <div class="section-body" id="body-summary">
       <div class="sb-pad">
-        <!-- FIX 4: data-panels attribute -->
         <div class="itabs" id="summaryTabs" data-panels="panels-summary">
           <button class="itab active" data-tab="daily">Daily</button>
           <button class="itab" data-tab="weekly">Weekly</button>
@@ -580,7 +565,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 </div><!-- /page -->
 
-<!-- FIX 3: peakData now uses script tag (same as all other data blocks) — immune to quote escaping -->
 <script id="peakData" type="application/json">{{ peak_hours | tojson }}</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -594,7 +578,7 @@ if(la)setTimeout(function(){la.style.transition="opacity .4s";la.style.opacity="
 /* ── toast ── */
 function toast(msg){var t=document.getElementById("toast");t.innerText=msg;t.style.opacity="1";clearTimeout(t._t);t._t=setTimeout(function(){t.style.opacity="0"},2000)}
 
-/* ══════════ COLLAPSIBLE SECTIONS ══════════ */
+/* ══ COLLAPSIBLE SECTIONS ══ */
 document.querySelectorAll(".section-hd").forEach(function(hd){
   hd.addEventListener("click",function(){
     var key=hd.dataset.section;
@@ -607,29 +591,26 @@ document.querySelectorAll(".section-hd").forEach(function(hd){
   });
 });
 
-/* ══════════ TABS — FIX 4: use data-panels to find panel container ══════════ */
+/* ══ TABS ══ */
 function initTabs(containerId){
-  var container=document.getElementById(containerId);
-  if(!container)return;
+  var container=document.getElementById(containerId);if(!container)return;
   container.addEventListener("click",function(e){
     var btn=e.target.closest("[data-tab]");if(!btn)return;
     var panelId=btn.dataset.tab;
     container.querySelectorAll(".tab,.itab").forEach(function(b){b.classList.remove("active")});
     btn.classList.add("active");
-    /* FIX 4: resolve panels via data-panels attribute, fall back to nextElementSibling */
     var panelsId=container.dataset.panels;
     var panels=panelsId?document.getElementById(panelsId):container.nextElementSibling;
     if(!panels)return;
     panels.querySelectorAll(".tab-panel,.itab-panel").forEach(function(p){p.classList.remove("active")});
-    var target=document.getElementById(panelId);
-    if(target)target.classList.add("active");
+    var target=document.getElementById(panelId);if(target)target.classList.add("active");
   });
 }
 initTabs("tabs-sales");
 initTabs("tabs-inventory");
 initTabs("summaryTabs");
 
-/* ══════════ CHARTS ══════════ */
+/* ══ CHARTS ══ */
 var ACCENT="#d4a96a",ACCENT2="#e8c490";
 var GRID="#1f1c18",PEAK_HI="#d4a96a",PEAK_BS="#3d3428";
 var CAT_COLORS=["#d4a96a","#5db88a","#6b9dd4","#d4954a","#a07ad4","#5db4b8","#d46090","#a0b45a"];
@@ -644,15 +625,21 @@ function makeSales(id,labels,vals,type){
   return new Chart(document.getElementById(id),{type:type,
     data:{labels:labels,datasets:[{data:vals,borderColor:ACCENT,backgroundColor:isLine?"rgba(212,169,106,.07)":ACCENT,fill:isLine,tension:.38,borderRadius:isLine?0:5,pointRadius:isLine?3:0,pointBackgroundColor:ACCENT2,borderSkipped:false}]},
     options:{responsive:true,plugins:{legend:{display:false},tooltip:Object.assign({},TT,{callbacks:{label:function(c){return" ₱ "+Number(c.raw).toLocaleString()}}})},
-      scales:{y:{beginAtZero:true,grid:{color:GRID},border:{color:"transparent"},ticks:{callback:function(v){return"₱"+Number(v).toLocaleString()},font:{size:10}}},x:{grid:{display:false},border:{color:"transparent"},ticks:{font:{size:10}}}}}});
+      scales:{y:{beginAtZero:true,grid:{color:GRID},border:{color:"transparent"},ticks:{callback:function(v){return"₱"+Number(v).toLocaleString()},font:{size:10}}},x:{grid:{display:false},border:{color:"transparent"},ticks:{font:{size:10},maxTicksLimit:18}}}}});
 }
-function makeBar(id,labels,vals,hi,bs){
+
+/* FIX #8: rebuilds the peak chart by replacing the canvas element entirely,
+   preventing Chart.js residual state from prior instances. */
+function makePeakChart(labels,vals){
+  var wrap=document.getElementById("peakChartWrap");
+  wrap.innerHTML='<canvas id="peakChart" height="140"></canvas>';
   var max=vals.length?Math.max.apply(null,vals):0;
-  return new Chart(document.getElementById(id),{type:"bar",
-    data:{labels:labels,datasets:[{data:vals,backgroundColor:vals.map(function(v){return v===max?hi:bs}),borderRadius:5,borderSkipped:false}]},
+  return new Chart(document.getElementById("peakChart"),{type:"bar",
+    data:{labels:labels,datasets:[{data:vals,backgroundColor:vals.map(function(v){return v===max?PEAK_HI:PEAK_BS}),borderRadius:5,borderSkipped:false}]},
     options:{responsive:true,plugins:{legend:{display:false},tooltip:TT},
       scales:{y:{beginAtZero:true,grid:{color:GRID},border:{color:"transparent"},ticks:{precision:0,font:{size:10}}},x:{grid:{display:false},border:{color:"transparent"},ticks:{font:{size:10}}}}}});
 }
+
 function makeDonut(id,labels,vals,colors){
   return new Chart(document.getElementById(id),{type:"doughnut",
     data:{labels:labels,datasets:[{data:vals,backgroundColor:colors,borderWidth:0,hoverOffset:3}]},
@@ -710,98 +697,162 @@ function renderRetention(repeat,newc){
   if(total===0)return;
   retInst=makeDonut("retentionChart",["Repeat","New"],[repeat,newc],[ACCENT,"#3d3428"]);
 }
-var DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+/* FIX #5: DAYS array indexed so MySQL DAYOFWEEK (1=Sun … 7=Sat) maps correctly.
+   Index 0 is unused; index 1 = "Sun", 2 = "Mon", … 7 = "Sat". */
+var DAYS=["","Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 function renderHeatmap(data){
   var grid=document.getElementById("heatmapGrid");grid.innerHTML="";
-  var lk={};data.forEach(function(r){if(!lk[r.dow])lk[r.dow]={};lk[r.dow][r.hr]=(lk[r.dow][r.hr]||0)+r.cnt});
+  var lk={};
+  data.forEach(function(r){
+    if(!lk[r.dow])lk[r.dow]={};
+    lk[r.dow][r.hr]=(lk[r.dow][r.hr]||0)+r.cnt;
+  });
   var maxV=data.length?Math.max.apply(null,data.map(function(r){return r.cnt})):1;
+  /* header row: empty corner + hour labels */
   grid.appendChild(Object.assign(document.createElement("div"),{className:"hm-cl"}));
   for(var h=0;h<24;h++){var l=document.createElement("div");l.className="hm-cl";l.textContent=h%4===0?hourLbl(h):"";grid.appendChild(l)}
+  /* FIX #5: iterate dow 1–7 (MySQL Sunday=1 … Saturday=7) */
   for(var d=1;d<=7;d++){
-    var rl=document.createElement("div");rl.className="hm-rl";rl.textContent=DAYS[d-1];grid.appendChild(rl);
+    var rl=document.createElement("div");rl.className="hm-rl";
+    rl.textContent=DAYS[d]; /* DAYS[1]="Sun", DAYS[2]="Mon", … DAYS[7]="Sat" */
+    grid.appendChild(rl);
     for(var hr=0;hr<24;hr++){
       var cnt=(lk[d]&&lk[d][hr])||0,cell=document.createElement("div");cell.className="hm-c";
       cell.style.background="rgba(212,169,106,"+(0.07+(maxV>0?cnt/maxV:0)*0.83).toFixed(2)+")";
-      if(cnt>0){var tip=document.createElement("div");tip.className="hm-t";tip.textContent=DAYS[d-1]+" "+hourLbl(hr)+" · "+cnt+" orders";cell.appendChild(tip)}
+      if(cnt>0){
+        var tip=document.createElement("div");tip.className="hm-t";
+        tip.textContent=DAYS[d]+" "+hourLbl(hr)+" · "+cnt+" orders";
+        cell.appendChild(tip);
+      }
       grid.appendChild(cell);
     }
   }
 }
 
-/* ── parse server data ── */
-var _daily   =JSON.parse(document.getElementById("dailySalesData").textContent);
-var _product =JSON.parse(document.getElementById("productSalesData").textContent);
-/* FIX 3: peakData now reads from script tag textContent (no attribute encoding issues) */
-var _peak    =JSON.parse(document.getElementById("peakData").textContent);
-var _heatmap =JSON.parse(document.getElementById("heatmapData").textContent);
-var _category=JSON.parse(document.getElementById("categoryData").textContent);
+/* ══ SERVER DATA ══ */
+var _daily    = JSON.parse(document.getElementById("dailySalesData").textContent);
+var _monthly  = JSON.parse(document.getElementById("monthlySalesData").textContent);
+var _weekly   = JSON.parse(document.getElementById("weeklySalesData").textContent);
+var _product  = JSON.parse(document.getElementById("productSalesData").textContent);
+var _peak     = JSON.parse(document.getElementById("peakData").textContent);
+var _heatmap  = JSON.parse(document.getElementById("heatmapData").textContent);
+var _category = JSON.parse(document.getElementById("categoryData").textContent);
 
-/* FIX 2: cache last sales data so chart type toggle never reads a destroyed instance */
-var lastSalesLabels=_daily.map(function(d){return d.label||fmtDay(d.day)});
-var lastSalesVals=_daily.map(function(d){return d.total});
+/* ── build yearly data from monthly ── */
+function buildYearly(monthlyData){
+  var byYear={};
+  monthlyData.forEach(function(m){
+    var yr=String(m.month||"").slice(0,4);
+    if(!yr)return;
+    byYear[yr]=(byYear[yr]||0)+parseFloat(m.total||0);
+  });
+  var years=Object.keys(byYear).sort();
+  return{labels:years,vals:years.map(function(y){return byYear[y]})};
+}
 
-var salesType="line";
-var salesChart=makeSales("salesChart",lastSalesLabels,lastSalesVals,salesType);
+/* FIX #7: Initial chart seeded directly from embedded server data — no fetch on page load.
+   We derive today's labels/vals from _daily (already scoped to last 30 days by the server,
+   but we only show today's slice which is the last entry if it matches today's date). */
+var todayStr = new Date().toISOString().slice(0,10);
+var todayData = _daily.filter(function(d){ return d.day === todayStr; });
+/* If today has data use it; otherwise show last 30-day window so the chart isn't blank */
+var initLabels = (todayData.length ? todayData : _daily).map(function(d){ return d.label || fmtDay(d.day); });
+var initVals   = (todayData.length ? todayData : _daily).map(function(d){ return d.total; });
+
+var lastSalesLabels = initLabels;
+var lastSalesVals   = initVals;
+var salesType = "line";
+var salesGran = "monthly";
+var salesChart = makeSales("salesChart", lastSalesLabels, lastSalesVals, salesType);
+
 renderProds(_product);
-var peakChart=makeBar("peakChart",_peak.map(function(p){return hourLbl(p.hour)}),_peak.map(function(p){return+p.total}),PEAK_HI,PEAK_BS);
+/* FIX #8: use makePeakChart (canvas-replacing) for initial render too */
+var peakChart = makePeakChart(
+  _peak.map(function(p){return hourLbl(p.hour)}),
+  _peak.map(function(p){return+p.total})
+);
 renderCat(_category);
-renderRetention({{ repeat_customers }},{{ new_customers }});
+renderRetention({{ repeat_customers }}, {{ new_customers }});
 renderHeatmap(_heatmap);
 
 /* ── state ── */
 var activeRange="today",customFrom=null,customTo=null,liveEnabled=true;
 var LABELS={all:"All time",today:"Today","7d":"Last 7 days","30d":"Last 30 days",custom:"Custom range"};
 
-/* FIX 1: use innerHTML on stable wrapper spans instead of outerHTML replacement */
+/* ══ CHART PILL VISIBILITY ══ */
+function syncPillVisibility(range){
+  var typePills=document.getElementById("chartTypePills");
+  var granPills=document.getElementById("chartGranPills");
+  var titleEl=document.getElementById("chartTitle");
+  if(range==="all"){
+    typePills.style.display="none";
+    granPills.style.display="flex";
+    titleEl.textContent=salesGran==="yearly"?"Yearly Revenue":"Monthly Revenue";
+  } else {
+    typePills.style.display="flex";
+    granPills.style.display="none";
+    titleEl.textContent="Daily Sales";
+  }
+}
+
+/* ══ REBUILD SALES CHART ══ */
+function rebuildSales(labels,vals){
+  lastSalesLabels=labels;
+  lastSalesVals=vals;
+  salesChart.destroy();
+  var type=(activeRange==="all"&&salesGran==="yearly")?"bar":salesType;
+  salesChart=makeSales("salesChart",labels,vals,type);
+  document.querySelectorAll(".cpill[data-type]").forEach(function(b){b.classList.toggle("active",b.dataset.type===salesType)});
+  document.querySelectorAll(".cpill[data-gran]").forEach(function(b){b.classList.toggle("active",b.dataset.gran===salesGran)});
+}
+
+/* ══ LOAD ALL-TIME CHART (from embedded data) ══ */
+function loadAllTimeChart(){
+  if(salesGran==="yearly"){
+    var yd=buildYearly(_monthly);
+    rebuildSales(yd.labels,yd.vals);
+  } else {
+    var labels=_monthly.map(function(m){return m.month||""});
+    var vals=_monthly.map(function(m){return parseFloat(m.total||0)});
+    rebuildSales(labels,vals);
+  }
+  syncPillVisibility("all");
+}
+
+/* ── delta HTML ── */
 function deltaHTML(val){
   if(val===null||val===undefined)return'<span class="delta nt">—</span>';
   return'<span class="delta '+(val>=0?"up":"dn")+'">'+(val>=0?"▲":"▼")+Math.abs(val)+'%</span>';
 }
 
-/* FIX 6: keep live dot in sync with both liveEnabled AND activeRange */
 function updateLiveDot(){
   var active=liveEnabled&&activeRange==="today";
   document.getElementById("liveDot").className="ld"+(active?"":" off");
   document.getElementById("liveLabel").innerText=active?"Live":"Paused";
 }
 
-/* FIX 4: safe best sellers builder — no innerHTML interpolation of server data */
 function renderBS(list){
-  var el=document.getElementById("bestSellersList");
-  el.innerHTML="";
+  var el=document.getElementById("bestSellersList");el.innerHTML="";
   if(!list||!list.length){
-    var empty=document.createElement("div");
-    empty.className="empty";
-    empty.style.padding="12px 0";
-    empty.innerHTML='<i class="fas fa-mug-hot"></i>';
-    empty.appendChild(document.createTextNode("No sales"));
-    el.appendChild(empty);
-    return;
+    var e=document.createElement("div");e.className="empty";e.style.padding="12px 0";
+    e.innerHTML='<i class="fas fa-mug-hot"></i>';e.appendChild(document.createTextNode("No sales"));
+    el.appendChild(e);return;
   }
   list.forEach(function(item,i){
     var row=document.createElement("div");row.className="li";
-    var rank=document.createElement("span");rank.className="lrank";rank.textContent="#"+(i+1);
-    var name=document.createElement("span");name.className="lname";name.textContent=item.name;
-    var badge=document.createElement("span");badge.className="bs";badge.textContent=item.total_sold;
-    row.appendChild(rank);row.appendChild(name);row.appendChild(badge);
-    el.appendChild(row);
+    var rk=document.createElement("span");rk.className="lrank";rk.textContent="#"+(i+1);
+    var nm=document.createElement("span");nm.className="lname";nm.textContent=item.name;
+    var bg=document.createElement("span");bg.className="bs";bg.textContent=item.total_sold;
+    row.appendChild(rk);row.appendChild(nm);row.appendChild(bg);el.appendChild(row);
   });
-}
-
-/* FIX 2: save labels+vals before destroying, so pill toggle is always safe */
-function rebuildSales(labels,vals){
-  lastSalesLabels=labels;
-  lastSalesVals=vals;
-  salesChart.destroy();
-  salesChart=makeSales("salesChart",labels,vals,salesType);
-  document.querySelectorAll(".cpill").forEach(function(b){b.classList.toggle("active",b.dataset.type===salesType)});
 }
 
 function setLoading(on){
   ["salesCard","productCard","peakCard","catCard"].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.toggle("loading",!!on)});
 }
 
-/* ── main fetch ── */
+/* ══ FETCH (for today / 7d / 30d / custom) ══ */
 function doFetch(range,from,to){
   setLoading(true);
   var url="/analytics-filter?range="+encodeURIComponent(range);
@@ -810,43 +861,40 @@ function doFetch(range,from,to){
     .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
     .then(function(d){
       var lbl=range==="custom"&&from&&to?(from+" → "+to):(LABELS[range]||range);
-      /* KPIs */
       document.getElementById("totalSales").innerText="₱ "+parseFloat(d.total_sales).toFixed(2);
       document.getElementById("ordersToday").innerText=d.orders_today;
       document.getElementById("customersToday").innerText=d.customers_today;
-      if(d.avg_order!==undefined)document.getElementById("avgOrder").innerText="₱ "+parseFloat(d.avg_order).toFixed(2);
+      /* FIX #3: avg_order label now updates to match the selected range */
+      if(d.avg_order!==undefined){
+        document.getElementById("avgOrder").innerText="₱ "+parseFloat(d.avg_order).toFixed(2);
+        document.getElementById("avgOrderSub").innerText=lbl;
+      }
       document.getElementById("totalSalesSub").innerText=lbl;
       document.getElementById("ordersSub").innerText=lbl;
       document.getElementById("customersSub").innerText=lbl;
-      document.getElementById("avgOrderSub").innerText=lbl;
-      /* FIX 1: update innerHTML of stable wrapper spans — elements are never removed from DOM */
       if(d.deltas){
-        var dr=document.getElementById("deltaRevenue");
-        if(dr)dr.innerHTML=deltaHTML(d.deltas.revenue);
-        var dord=document.getElementById("deltaOrders");
-        if(dord)dord.innerHTML=deltaHTML(d.deltas.orders);
-        var dc=document.getElementById("deltaCustomers");
-        if(dc)dc.innerHTML=deltaHTML(d.deltas.customers);
+        var dr=document.getElementById("deltaRevenue");if(dr)dr.innerHTML=deltaHTML(d.deltas.revenue);
+        var dord=document.getElementById("deltaOrders");if(dord)dord.innerHTML=deltaHTML(d.deltas.orders);
+        var dc=document.getElementById("deltaCustomers");if(dc)dc.innerHTML=deltaHTML(d.deltas.customers);
       }
-      /* labels */
       document.getElementById("chartRangeLabel").innerText=lbl;
       document.getElementById("prodRangeLabel").innerText=lbl;
       document.getElementById("bsSub").innerText=lbl;
       var cs=document.getElementById("catSub");if(cs)cs.innerText=lbl;
       var sp=document.getElementById("spill-range");if(sp)sp.innerText=lbl;
       var ss=document.getElementById("spill-summary");if(ss)ss.innerText=lbl;
-      /* charts */
+      syncPillVisibility(range);
       rebuildSales(
         d.daily_sales.map(function(x){return x.label||fmtDay(x.day)}),
         d.daily_sales.map(function(x){return x.total})
       );
       renderProds(d.product_data);
       renderCat(d.category_revenue||[]);
-      var pkMax=d.peak_hours.length?Math.max.apply(null,d.peak_hours.map(function(p){return+p.total})):0;
-      peakChart.data.labels=d.peak_hours.map(function(p){return hourLbl(+p.hour)});
-      peakChart.data.datasets[0].data=d.peak_hours.map(function(p){return+p.total});
-      peakChart.data.datasets[0].backgroundColor=d.peak_hours.map(function(p){return+p.total===pkMax?PEAK_HI:PEAK_BS});
-      peakChart.update();
+      /* FIX #8: replace canvas instead of destroy+reuse */
+      peakChart = makePeakChart(
+        d.peak_hours.map(function(p){return hourLbl(+p.hour)}),
+        d.peak_hours.map(function(p){return+p.total})
+      );
       if(d.repeat_customers!==undefined)renderRetention(d.repeat_customers,d.new_customers);
       renderBS(d.best_sellers);
       toast("Showing: "+lbl);
@@ -855,7 +903,7 @@ function doFetch(range,from,to){
     .finally(function(){setLoading(false)});
 }
 
-/* ── custom range bar ── */
+/* ══ CUSTOM RANGE BAR ══ */
 var crBar=document.getElementById("customRangeBar");
 var dfrom=document.getElementById("dateFrom"),dto=document.getElementById("dateTo");
 var reEl=document.getElementById("rangeError");
@@ -873,35 +921,81 @@ document.getElementById("cancelRangeBtn").addEventListener("click",function(){
 });
 [dfrom,dto].forEach(function(el){el.addEventListener("keydown",function(e){if(e.key==="Enter")document.getElementById("applyRangeBtn").click()})});
 
-/* ── filter ── */
+/* ══ FILTER BUTTONS ══ */
 function setFilter(btn,range){
   document.querySelectorAll(".btn-f").forEach(function(b){b.classList.remove("active")});
   btn.classList.add("active");
   if(range==="custom"){openCR();return}
   closeCR();
   activeRange=range;
-  updateLiveDot(); /* FIX 6: sync dot whenever range changes */
-  doFetch(range,null,null);
+  updateLiveDot();
+  if(range==="all"){
+    setLoading(true);
+    var lbl=LABELS.all;
+    fetch("/analytics-filter?range=all")
+      .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
+      .then(function(d){
+        document.getElementById("totalSales").innerText="₱ "+parseFloat(d.total_sales).toFixed(2);
+        document.getElementById("ordersToday").innerText=d.orders_today;
+        document.getElementById("customersToday").innerText=d.customers_today;
+        /* FIX #3: avg_order and its label update on range change */
+        if(d.avg_order!==undefined){
+          document.getElementById("avgOrder").innerText="₱ "+parseFloat(d.avg_order).toFixed(2);
+          document.getElementById("avgOrderSub").innerText=lbl;
+        }
+        document.getElementById("totalSalesSub").innerText=lbl;
+        document.getElementById("ordersSub").innerText=lbl;
+        document.getElementById("customersSub").innerText=lbl;
+        ["deltaRevenue","deltaOrders","deltaCustomers"].forEach(function(id){
+          var el=document.getElementById(id);
+          if(el)el.innerHTML='<span class="delta nt">—</span>';
+        });
+        document.getElementById("chartRangeLabel").innerText=lbl;
+        document.getElementById("prodRangeLabel").innerText=lbl;
+        document.getElementById("bsSub").innerText=lbl;
+        var cs=document.getElementById("catSub");if(cs)cs.innerText=lbl;
+        var sp=document.getElementById("spill-range");if(sp)sp.innerText=lbl;
+        var ss=document.getElementById("spill-summary");if(ss)ss.innerText=lbl;
+        if(d.repeat_customers!==undefined)renderRetention(d.repeat_customers,d.new_customers);
+        renderProds(d.product_data);
+        renderCat(d.category_revenue||[]);
+        renderBS(d.best_sellers);
+        /* FIX #8: replace canvas */
+        peakChart = makePeakChart(
+          d.peak_hours.map(function(p){ return hourLbl(+p.hour); }),
+          d.peak_hours.map(function(p){ return +p.total; })
+        );
+        syncPillVisibility("all");
+        loadAllTimeChart();
+        toast("Showing: "+lbl);
+      })
+      .catch(function(err){toast("Failed to load");console.error(err)})
+      .finally(function(){setLoading(false)});
+  } else {
+    /* FIX #7: "today" is now always fetched fresh when the user clicks it,
+       but NOT on initial page load (init block below seeds from embedded data). */
+    doFetch(range,null,null);
+  }
 }
 document.getElementById("filterGroup").addEventListener("click",function(e){
   var b=e.target.closest("[data-range]");if(!b)return;setFilter(b,b.dataset.range);
 });
 
-/* ── chart type pills — FIX 2: use cached data, not destroyed chart instance ── */
+/* ══ CHART TYPE PILLS (Line/Bar) ══ */
 document.addEventListener("click",function(e){
-  var b=e.target.closest(".cpill[data-type]");if(!b)return;
-  salesType=b.dataset.type;
-  rebuildSales(lastSalesLabels.slice(),lastSalesVals.slice());
+  var tb=e.target.closest(".cpill[data-type]");
+  if(tb){salesType=tb.dataset.type;rebuildSales(lastSalesLabels.slice(),lastSalesVals.slice());return}
+  var gb=e.target.closest(".cpill[data-gran]");
+  if(gb){salesGran=gb.dataset.gran;loadAllTimeChart();return}
 });
 
-/* ── toolbar ── */
+/* ══ TOOLBAR ══ */
 document.getElementById("refreshBtn").addEventListener("click",function(){
-  doFetch(activeRange,activeRange==="custom"?customFrom:null,activeRange==="custom"?customTo:null);
+  if(activeRange==="all"){loadAllTimeChart();}
+  else{doFetch(activeRange,activeRange==="custom"?customFrom:null,activeRange==="custom"?customTo:null);}
 });
 document.getElementById("liveToggle").addEventListener("change",function(e){
-  liveEnabled=!!e.target.checked;
-  updateLiveDot(); /* FIX 6: centralised dot update */
-  toast(liveEnabled?"Live ON":"Live paused");
+  liveEnabled=!!e.target.checked;updateLiveDot();toast(liveEnabled?"Live ON":"Live paused");
 });
 document.getElementById("exportBtn").addEventListener("click",function(){
   var url="/export-csv?range="+encodeURIComponent(activeRange);
@@ -909,30 +1003,41 @@ document.getElementById("exportBtn").addEventListener("click",function(){
   window.location.href=url;
 });
 
-/* ── live poll — FIX 6: skip when tab is hidden to avoid wasted requests ── */
+/* ══ LIVE POLL ══
+   FIX #9: poll now also refreshes delta badges and avg_order so live view stays fully current. */
 setInterval(function(){
-  if(!liveEnabled||activeRange!=="today")return;
-  if(document.hidden)return; /* FIX 6: pause while tab is in background */
+  if(!liveEnabled||activeRange!=="today"||document.hidden)return;
   fetch("/live-data?range=today").then(function(r){return r.json()}).then(function(data){
-    document.getElementById("ordersToday").innerText=data.orders_today;
-    document.getElementById("customersToday").innerText=data.customers_today;
-    if(data.total_sales!=null)document.getElementById("totalSales").innerText="₱ "+parseFloat(data.total_sales).toFixed(2);
+    if(data.orders_today!=null)   document.getElementById("ordersToday").innerText=data.orders_today;
+    if(data.customers_today!=null)document.getElementById("customersToday").innerText=data.customers_today;
+    if(data.total_sales!=null)    document.getElementById("totalSales").innerText="₱ "+parseFloat(data.total_sales).toFixed(2);
+    /* FIX #9: refresh avg_order if the live endpoint returns it */
+    if(data.avg_order!=null)      document.getElementById("avgOrder").innerText="₱ "+parseFloat(data.avg_order).toFixed(2);
+    /* FIX #9: refresh delta badges if the live endpoint returns them */
+    if(data.deltas){
+      var dr=document.getElementById("deltaRevenue");   if(dr)dr.innerHTML=deltaHTML(data.deltas.revenue);
+      var dor=document.getElementById("deltaOrders");   if(dor)dor.innerHTML=deltaHTML(data.deltas.orders);
+      var dc=document.getElementById("deltaCustomers"); if(dc)dc.innerHTML=deltaHTML(data.deltas.customers);
+    }
   }).catch(function(){});
 },3000);
 
-/* ── keyboard — FIX 5: guard when custom range bar is open ── */
+/* ══ KEYBOARD ══ */
 document.addEventListener("keydown",function(e){
   if(["INPUT","TEXTAREA"].includes(e.target.tagName))return;
   if(e.key==="Escape"){closeCR();return}
-  if(crBar.classList.contains("open"))return; /* FIX 5: ignore shortcuts while date bar is open */
+  if(crBar.classList.contains("open"))return;
   if(e.key==="r"){document.getElementById("refreshBtn").click();return}
   var map={a:"all",t:"today","7":"7d","3":"30d"};
   if(map[e.key]){var b=document.querySelector('[data-range="'+map[e.key]+'"]');if(b)setFilter(b,map[e.key])}
 });
 
-/* ── FIX 5: init — script is at bottom of page so DOM is already ready, no DOMContentLoaded needed ── */
-var tb=document.querySelector('[data-range="today"]');
-if(tb)setFilter(tb,"today");
+/* ══ INIT ══
+   FIX #7: seed UI labels from embedded data without triggering a fetch.
+   The "Today" button is visually active (set in HTML), live dot is synced,
+   and the avg sub-label is corrected to "Today" to match revenue_today. */
+updateLiveDot();
+syncPillVisibility("today");
 
 })();
 </script>
