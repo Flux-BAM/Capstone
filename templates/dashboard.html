@@ -754,14 +754,8 @@ function buildYearly(monthlyData){
 /* FIX #7: Initial chart seeded directly from embedded server data — no fetch on page load.
    We derive today's labels/vals from _daily (already scoped to last 30 days by the server,
    but we only show today's slice which is the last entry if it matches today's date). */
-var todayStr = new Date().toISOString().slice(0,10);
-var todayData = _daily.filter(function(d){ return d.day === todayStr; });
-/* If today has data use it; otherwise show last 30-day window so the chart isn't blank */
-var initLabels = (todayData.length ? todayData : _daily).map(function(d){ return d.label || fmtDay(d.day); });
-var initVals   = (todayData.length ? todayData : _daily).map(function(d){ return d.total; });
-
-var lastSalesLabels = initLabels;
-var lastSalesVals   = initVals;
+var lastSalesLabels = [];
+var lastSalesVals   = [];
 var salesType = "line";
 var salesGran = "monthly";
 var salesChart = makeSales("salesChart", lastSalesLabels, lastSalesVals, salesType);
@@ -1038,6 +1032,7 @@ document.addEventListener("keydown",function(e){
    and the avg sub-label is corrected to "Today" to match revenue_today. */
 updateLiveDot();
 syncPillVisibility("today");
+doFetch("today", null, null);
 
 })();
 </script>
