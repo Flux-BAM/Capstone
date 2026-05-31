@@ -1102,6 +1102,43 @@ def delete_product(product_id):
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+        # ── GET RECIPE ────────────────────────────────────────────────────────────────
+
+@app.route('/get-recipe/<int:product_id>')
+def get_recipe(product_id):
+    if not is_logged_in():
+        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute("SELECT name FROM products WHERE id = %s", (product_id,))
+    product = cursor.fetchone()
+    if not product:
+        return jsonify({"status": "error", "message": "Product not found"}), 404
+
+    cursor.execute("""
+        SELECT i.name, r.quantity, i.unit
+        FROM recipes r
+        JOIN ingredients i ON r.ingredient_id = i.id
+        WHERE r.product_id = %s
+        ORDER BY i.name ASC
+    """, (product_id,))
+    rows = cursor.fetchall()
+
+    ingredients = [
+        {
+            "name":     r["name"],
+            "quantity": r["quantity"],
+            "unit":     r["unit"]
+        }
+        for r in rows
+    ]
+
+    return jsonify({
+        "product":     product["name"],
+        "ingredients": ingredients
+    })
+
+
 # ── ADD INGREDIENT ────────────────────────────────────────────────────────────
 
 @app.route('/add-ingredient', methods=['GET', 'POST'])
