@@ -172,14 +172,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .dlv{font-family:var(--mono);font-weight:600;color:var(--text);font-size:11px;white-space:nowrap}
 
 /* ══ HEATMAP ══ */
-.hm-scroll{overflow-x:auto}
-.hm-grid{display:grid;grid-template-columns:34px repeat(24,1fr);gap:2px;min-width:520px}
-.hm-rl{font-size:8px;color:var(--muted);font-family:var(--mono);display:flex;align-items:center;justify-content:flex-end;padding-right:4px;height:18px}
-.hm-cl{font-size:7.5px;color:var(--muted);font-family:var(--mono);text-align:center;padding-bottom:3px;line-height:1}
-.hm-c{height:18px;border-radius:2px;position:relative;cursor:default}
+/* ══ HEATMAP ══ */
+.hm-wrap{overflow-x:auto;padding-bottom:4px}
+.hm-grid{display:grid;grid-template-columns:42px repeat(18,minmax(22px,1fr));gap:3px;min-width:480px}
+.hm-rl{font-size:9.5px;color:var(--muted2);font-family:var(--mono);display:flex;align-items:center;justify-content:flex-end;padding-right:6px;height:26px;white-space:nowrap;font-weight:500}
+.hm-cl{font-size:8.5px;color:var(--muted);font-family:var(--mono);text-align:center;padding-bottom:5px;line-height:1;white-space:nowrap}
+.hm-c{height:26px;border-radius:4px;position:relative;cursor:default;transition:opacity .12s,transform .12s}
+.hm-c.hm-empty{background:rgba(255,255,255,.03) !important}
+.hm-c:hover{opacity:.8;transform:scale(1.1);z-index:2}
 .hm-c:hover .hm-t{display:block}
-.hm-t{display:none;position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--bg4);border:1px solid var(--border3);border-radius:5px;padding:4px 7px;font-size:10px;color:var(--text);font-family:var(--mono);white-space:nowrap;z-index:20;pointer-events:none}
-
+.hm-t{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg4);border:1px solid var(--border3);border-radius:6px;padding:5px 9px;font-size:10.5px;color:var(--text);font-family:var(--mono);white-space:nowrap;z-index:40;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+.hm-legend{display:flex;align-items:center;gap:6px;margin-top:10px;justify-content:flex-end}
+.hm-legend-label{font-size:9px;color:var(--muted);font-family:var(--mono)}
+.hm-legend-bar{height:8px;width:80px;border-radius:3px;background:linear-gradient(90deg,rgba(212,169,106,.1),rgba(212,169,106,.95))}
 /* ══ FORECAST ══ */
 .fc-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .fc-d{background:var(--bg4);border:1px solid var(--border);border-radius:var(--rs);padding:9px 6px;text-align:center}
@@ -389,8 +394,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
               <div id="peakChartWrap"><canvas id="peakChart" height="140"></canvas></div>
             </div>
             <div class="card">
-              <div class="ch"><div class="ct"><i class="fas fa-table-cells"></i> Day × Hour Heatmap</div><span class="cs">Last 8 weeks</span></div>
-              <div class="hm-scroll"><div class="hm-grid" id="heatmapGrid"></div></div>
+              <div class="ct"><i class="fas fa-table-cells"></i> Day × Hour Heatmap</div><span class="cs" id="heatmapRangeLabel">Last 8 weeks</span>
+              <div class="hm-wrap">
+            <div class="hm-grid" id="heatmapGrid"></div>
+            <div class="hm-legend">
+              <span class="hm-legend-label">Low</span>
+              <div class="hm-legend-bar"></div>
+              <span class="hm-legend-label">High</span>
+            </div>
+          </div>
               <script id="heatmapData" type="application/json">{{ heatmap | tojson }}</script>
             </div>
           </div>
@@ -421,7 +433,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <div class="sb-pad">
         <div class="g3">
           <div class="card">
-            <div class="ch"><div class="ct"><i class="fas fa-rotate"></i> Retention</div><span class="cs">Last 30 days</span></div>
+            <div class="ch"><div class="ct"><i class="fas fa-rotate"></i> Retention</div><span class="cs"></span></div>
             <div class="dw">
               <canvas id="retentionChart" width="96" height="96" style="flex-shrink:0"></canvas>
               <div class="dl">
@@ -537,7 +549,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         </div>
       </div>
       <div class="sh-badges">
-        <span class="sh-pill accent" id="spill-summary">All time</span>
+        
       </div>
       <i class="fas fa-chevron-down sh-chevron" id="chev-summary"></i>
     </div>
@@ -700,29 +712,83 @@ function renderRetention(repeat,newc){
 
 /* FIX #5: DAYS array indexed so MySQL DAYOFWEEK (1=Sun … 7=Sat) maps correctly.
    Index 0 is unused; index 1 = "Sun", 2 = "Mon", … 7 = "Sat". */
-var DAYS=["","Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-function renderHeatmap(data){
-  var grid=document.getElementById("heatmapGrid");grid.innerHTML="";
-  var lk={};
-  data.forEach(function(r){
-    if(!lk[r.dow])lk[r.dow]={};
-    lk[r.dow][r.hr]=(lk[r.dow][r.hr]||0)+r.cnt;
+var DAYS = ["","Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+/* Show only business-relevant hours (6AM–11PM = hr 6–23) */
+var HM_START = 6, HM_END = 23;
+
+function renderHeatmap(data) {
+  var grid = document.getElementById("heatmapGrid");
+  grid.innerHTML = "";
+
+  /* update the date range label dynamically */
+var hmLabel = document.getElementById("heatmapRangeLabel");
+if (hmLabel) {
+  var now = new Date();
+  var past = new Date(now);
+  past.setDate(now.getDate() - 56); // 8 weeks = 56 days
+  var fmt = function(d) {
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
+  hmLabel.textContent = fmt(past) + " – " + fmt(now);
+}
+
+  if (!data || !data.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:28px 0;font-size:11px;color:var(--muted)"><i class="fas fa-calendar-xmark" style="display:block;font-size:18px;margin-bottom:8px;color:var(--border2)"></i>No activity in the last 8 weeks</div>';
+    return;
+  }
+
+  /* aggregate: lk[dow][hr] = total orders */
+  var lk = {};
+  data.forEach(function(r) {
+    var d = r.dow, h = r.hr, c = r.cnt;
+    if (!lk[d]) lk[d] = {};
+    lk[d][h] = (lk[d][h] || 0) + c;
   });
-  var maxV=data.length?Math.max.apply(null,data.map(function(r){return r.cnt})):1;
-  /* header row: empty corner + hour labels */
-  grid.appendChild(Object.assign(document.createElement("div"),{className:"hm-cl"}));
-  for(var h=0;h<24;h++){var l=document.createElement("div");l.className="hm-cl";l.textContent=h%4===0?hourLbl(h):"";grid.appendChild(l)}
-  /* FIX #5: iterate dow 1–7 (MySQL Sunday=1 … Saturday=7) */
-  for(var d=1;d<=7;d++){
-    var rl=document.createElement("div");rl.className="hm-rl";
-    rl.textContent=DAYS[d]; /* DAYS[1]="Sun", DAYS[2]="Mon", … DAYS[7]="Sat" */
+
+  /* find max across business hours only for better color scaling */
+  var maxV = 1;
+  for (var d = 1; d <= 7; d++) {
+    for (var h = HM_START; h <= HM_END; h++) {
+      var v = (lk[d] && lk[d][h]) || 0;
+      if (v > maxV) maxV = v;
+    }
+  }
+
+  /* header: corner + hour labels (every 2 hours) */
+  grid.appendChild(Object.assign(document.createElement("div"), {className:"hm-cl"}));
+  for (var h = HM_START; h <= HM_END; h++) {
+    var lbl = document.createElement("div");
+    lbl.className = "hm-cl";
+    lbl.textContent = (h % 2 === 0) ? hourLbl(h) : "";
+    grid.appendChild(lbl);
+  }
+
+  /* rows: dow 1 (Sun) … 7 (Sat) */
+  for (var d = 1; d <= 7; d++) {
+    var rl = document.createElement("div");
+    rl.className = "hm-rl";
+    rl.textContent = DAYS[d];
     grid.appendChild(rl);
-    for(var hr=0;hr<24;hr++){
-      var cnt=(lk[d]&&lk[d][hr])||0,cell=document.createElement("div");cell.className="hm-c";
-      cell.style.background="rgba(212,169,106,"+(0.07+(maxV>0?cnt/maxV:0)*0.83).toFixed(2)+")";
-      if(cnt>0){
-        var tip=document.createElement("div");tip.className="hm-t";
-        tip.textContent=DAYS[d]+" "+hourLbl(hr)+" · "+cnt+" orders";
+
+    for (var hr = HM_START; hr <= HM_END; hr++) {
+      var cnt = (lk[d] && lk[d][hr]) || 0;
+      var cell = document.createElement("div");
+
+      if (cnt === 0) {
+        /* truly empty — invisible so active cells stand out clearly */
+        cell.className = "hm-c hm-empty";
+      } else {
+        cell.className = "hm-c";
+        /* square-root scaling makes mid-range activity more visible */
+        var intensity = Math.sqrt(cnt / maxV);
+        var alpha = (0.12 + intensity * 0.83).toFixed(2);
+        cell.style.background = "rgba(212,169,106," + alpha + ")";
+
+        var tip = document.createElement("div");
+        tip.className = "hm-t";
+        tip.textContent = DAYS[d] + " " + hourLbl(hr) + " \u00b7 "
+          + cnt + " order" + (cnt !== 1 ? "s" : "")
+          + " (" + Math.round((cnt / maxV) * 100) + "% of peak)";
         cell.appendChild(tip);
       }
       grid.appendChild(cell);
