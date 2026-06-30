@@ -98,8 +98,7 @@ def dashboard():
     cursor.execute("SELECT COALESCE(SUM(total),0) AS t FROM sales")
     total_sales = float(cursor.fetchone()['t'] or 0)
 
-    # FIX #2: Use COUNT(DISTINCT customer_name) so this reflects unique customers,
-    # not total order rows.
+    
     cursor.execute("SELECT COUNT(DISTINCT customer_name) AS c FROM sales WHERE customer_name IS NOT NULL AND customer_name != ''")
     total_customers = int(cursor.fetchone()['c'] or 0)
 
@@ -116,8 +115,7 @@ def dashboard():
     cursor.execute("SELECT COALESCE(SUM(total),0) AS t FROM sales WHERE DATE(created_at)=CURDATE()")
     revenue_today = float(cursor.fetchone()['t'] or 0)
 
-    # FIX #3: Compute avg_order_value scoped to today so the KPI strip is
-    # consistent with the default "Today" filter on page load.
+    
     cursor.execute("SELECT COALESCE(AVG(total),0) AS a FROM sales WHERE DATE(created_at)=CURDATE()")
     avg_order_value_today = float(cursor.fetchone()['a'] or 0)
 
@@ -236,10 +234,7 @@ def dashboard():
         d = today + datetime.timedelta(days=i)
         forecast.append({"day": d.strftime("%b %d"), "projected": round(avg_daily, 2)})
 
-    # ── Day-of-week heatmap (last 8 weeks) ───────────────────────────────────
-    # FIX #5: MySQL DAYOFWEEK returns 1=Sunday … 7=Saturday.  The JS heatmap
-    # renderer uses DAYS[d] where d runs 1–7 with DAYS[1]="Sun" … DAYS[7]="Sat",
-    # so the mapping is now consistent end-to-end.  No transformation needed here.
+   
     cursor.execute("""
         SELECT DAYOFWEEK(created_at) AS dow,
                HOUR(created_at)     AS hr,

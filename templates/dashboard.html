@@ -269,7 +269,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
     <div class="kpi">
       <div class="kpi-lbl"><i class="fas fa-users"></i> Total Customers</div>
-      <!-- FIX #2: total_customers now reflects COUNT(DISTINCT customer_name) from the backend -->
+      
       <div class="kpi-val">{{ total_customers }}</div>
       <div class="kpi-foot"><span class="kpi-sub">All time</span></div>
     </div>
@@ -291,7 +291,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
     <div class="kpi">
       <div class="kpi-lbl"><i class="fas fa-receipt"></i> Avg Order</div>
-      <!-- FIX #3: avg_order_value now rendered with range-aware label; initial label matches "Today" -->
+     
       <div class="kpi-val" id="avgOrder">₱ {{ "%.2f"|format(avg_order_value_today|float) }}</div>
       <div class="kpi-foot"><span class="kpi-sub" id="avgOrderSub">Today</span></div>
     </div>
@@ -390,7 +390,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
           <div class="g2r">
             <div class="card" id="peakCard">
               <div class="ch"><div class="ct"><i class="fas fa-clock"></i> Peak Hours</div><span class="cs">Customers / hour</span></div>
-              <!-- FIX #8: wrapper div used to replace canvas cleanly on chart rebuild -->
+             
               <div id="peakChartWrap"><canvas id="peakChart" height="140"></canvas></div>
             </div>
             <div class="card">
@@ -640,8 +640,7 @@ function makeSales(id,labels,vals,type){
       scales:{y:{beginAtZero:true,grid:{color:GRID},border:{color:"transparent"},ticks:{callback:function(v){return"₱"+Number(v).toLocaleString()},font:{size:10}}},x:{grid:{display:false},border:{color:"transparent"},ticks:{font:{size:10},maxTicksLimit:18}}}}});
 }
 
-/* FIX #8: rebuilds the peak chart by replacing the canvas element entirely,
-   preventing Chart.js residual state from prior instances. */
+
 function makePeakChart(labels,vals){
   var wrap=document.getElementById("peakChartWrap");
   wrap.innerHTML='<canvas id="peakChart" height="140"></canvas>';
@@ -817,9 +816,7 @@ function buildYearly(monthlyData){
   return{labels:years,vals:years.map(function(y){return byYear[y]})};
 }
 
-/* FIX #7: Initial chart seeded directly from embedded server data — no fetch on page load.
-   We derive today's labels/vals from _daily (already scoped to last 30 days by the server,
-   but we only show today's slice which is the last entry if it matches today's date). */
+
 var lastSalesLabels = [];
 var lastSalesVals   = [];
 var salesType = "line";
@@ -827,7 +824,7 @@ var salesGran = "monthly";
 var salesChart = makeSales("salesChart", lastSalesLabels, lastSalesVals, salesType);
 
 renderProds(_product);
-/* FIX #8: use makePeakChart (canvas-replacing) for initial render too */
+
 var peakChart = makePeakChart(
   _peak.map(function(p){return hourLbl(p.hour)}),
   _peak.map(function(p){return+p.total})
@@ -924,7 +921,7 @@ function doFetch(range,from,to){
       document.getElementById("totalSales").innerText="₱ "+parseFloat(d.total_sales).toFixed(2);
       document.getElementById("ordersToday").innerText=d.orders_today;
       document.getElementById("customersToday").innerText=d.customers_today;
-      /* FIX #3: avg_order label now updates to match the selected range */
+      
       if(d.avg_order!==undefined){
         document.getElementById("avgOrder").innerText="₱ "+parseFloat(d.avg_order).toFixed(2);
         document.getElementById("avgOrderSub").innerText=lbl;
@@ -950,7 +947,7 @@ function doFetch(range,from,to){
       );
       renderProds(d.product_data);
       renderCat(d.category_revenue||[]);
-      /* FIX #8: replace canvas instead of destroy+reuse */
+      
       peakChart = makePeakChart(
         d.peak_hours.map(function(p){return hourLbl(+p.hour)}),
         d.peak_hours.map(function(p){return+p.total})
@@ -998,7 +995,7 @@ function setFilter(btn,range){
         document.getElementById("totalSales").innerText="₱ "+parseFloat(d.total_sales).toFixed(2);
         document.getElementById("ordersToday").innerText=d.orders_today;
         document.getElementById("customersToday").innerText=d.customers_today;
-        /* FIX #3: avg_order and its label update on range change */
+        
         if(d.avg_order!==undefined){
           document.getElementById("avgOrder").innerText="₱ "+parseFloat(d.avg_order).toFixed(2);
           document.getElementById("avgOrderSub").innerText=lbl;
@@ -1020,7 +1017,7 @@ function setFilter(btn,range){
         renderProds(d.product_data);
         renderCat(d.category_revenue||[]);
         renderBS(d.best_sellers);
-        /* FIX #8: replace canvas */
+       
         peakChart = makePeakChart(
           d.peak_hours.map(function(p){ return hourLbl(+p.hour); }),
           d.peak_hours.map(function(p){ return +p.total; })
@@ -1032,8 +1029,7 @@ function setFilter(btn,range){
       .catch(function(err){toast("Failed to load");console.error(err)})
       .finally(function(){setLoading(false)});
   } else {
-    /* FIX #7: "today" is now always fetched fresh when the user clicks it,
-       but NOT on initial page load (init block below seeds from embedded data). */
+    
     doFetch(range,null,null);
   }
 }
@@ -1063,17 +1059,17 @@ document.getElementById("exportBtn").addEventListener("click",function(){
   window.location.href=url;
 });
 
-/* ══ LIVE POLL ══
-   FIX #9: poll now also refreshes delta badges and avg_order so live view stays fully current. */
+/* ══ LIVE POLL ══*/
+  
 setInterval(function(){
   if(!liveEnabled||activeRange!=="today"||document.hidden)return;
   fetch("/live-data?range=today").then(function(r){return r.json()}).then(function(data){
     if(data.orders_today!=null)   document.getElementById("ordersToday").innerText=data.orders_today;
     if(data.customers_today!=null)document.getElementById("customersToday").innerText=data.customers_today;
     if(data.total_sales!=null)    document.getElementById("totalSales").innerText="₱ "+parseFloat(data.total_sales).toFixed(2);
-    /* FIX #9: refresh avg_order if the live endpoint returns it */
+    
     if(data.avg_order!=null)      document.getElementById("avgOrder").innerText="₱ "+parseFloat(data.avg_order).toFixed(2);
-    /* FIX #9: refresh delta badges if the live endpoint returns them */
+    
     if(data.deltas){
       var dr=document.getElementById("deltaRevenue");   if(dr)dr.innerHTML=deltaHTML(data.deltas.revenue);
       var dor=document.getElementById("deltaOrders");   if(dor)dor.innerHTML=deltaHTML(data.deltas.orders);
@@ -1092,10 +1088,7 @@ document.addEventListener("keydown",function(e){
   if(map[e.key]){var b=document.querySelector('[data-range="'+map[e.key]+'"]');if(b)setFilter(b,map[e.key])}
 });
 
-/* ══ INIT ══
-   FIX #7: seed UI labels from embedded data without triggering a fetch.
-   The "Today" button is visually active (set in HTML), live dot is synced,
-   and the avg sub-label is corrected to "Today" to match revenue_today. */
+
 updateLiveDot();
 syncPillVisibility("today");
 doFetch("today", null, null);
