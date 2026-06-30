@@ -545,7 +545,7 @@
 <!-- Overlay -->
 <div class="sb-overlay" id="sbOverlay"></div>
 
-<!-- Notification panel (outside sidebar so it overlays content) -->
+
 <div class="notif-panel" id="notifPanel">
   <div class="np-head">
     <div class="np-head-icon"><i class="fas fa-bell"></i></div>
@@ -828,7 +828,7 @@
     });
   }
 
-  /* Render notification list with current filter */
+ 
   function renderList(items) {
     var filters = activeFilter.split(' ');
     var filtered = activeFilter === 'all' ? items : items.filter(function (n) {
@@ -876,7 +876,7 @@
     });
   }
 
-  /* Fetch from /notifications */
+  
   function fetchNotifications(onDone) {
     npList.innerHTML = '<div class="np-loading"><div class="np-spinner"></div> Checking everything…</div>';
 
