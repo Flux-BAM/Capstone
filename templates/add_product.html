@@ -177,7 +177,7 @@
       <h1><i class="fas fa-box-open me-2" style="color:var(--accent)"></i>Add Product</h1>
       <p>Create a new product and define its ingredient recipe</p>
     </div>
-    <a href="{{ url_for('products') }}" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+    <a href="{{ url_for('products.products') }}" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
   </div>
 
   <form method="POST" action="/add-product" enctype="multipart/form-data" id="addProductForm">

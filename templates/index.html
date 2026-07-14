@@ -589,36 +589,36 @@
     <div class="sb-nav">
 
       <div class="sb-label">Overview</div>
-      <a href="{{ url_for('dashboard') }}"
-         class="sb-link {% if request.path == url_for('dashboard') %}active{% endif %}">
+      <a href="{{ url_for('analytics.dashboard') }}"
+         class="sb-link {% if request.path == url_for('analytics.dashboard') %}active{% endif %}">
         <span class="sb-icon"><i class="fas fa-chart-line"></i></span>
         <span class="sb-text">Analytics</span>
       </a>
 
       <div class="sb-label">Operations</div>
-      <a href="{{ url_for('orders') }}"
-         class="sb-link {% if request.path == url_for('orders') %}active{% endif %}">
+      <a href="{{ url_for('orders.orders') }}"
+         class="sb-link {% if request.path == url_for('orders.orders') %}active{% endif %}">
         <span class="sb-icon"><i class="fas fa-cart-plus"></i></span>
         <span class="sb-text">New Order</span>
       </a>
-      <a href="{{ url_for('view_orders') }}"
-         class="sb-link {% if request.path == url_for('view_orders') %}active{% endif %}">
+      <a href="{{ url_for('orders.view_orders') }}"
+         class="sb-link {% if request.path == url_for('orders.view_orders') %}active{% endif %}">
         <span class="sb-icon"><i class="fas fa-clipboard-list"></i></span>
         <span class="sb-text">Order History</span>
       </a>
-      <a href="{{ url_for('inventory') }}"
-         class="sb-link {% if request.path == url_for('inventory') %}active{% endif %}">
+      <a href="{{ url_for('inventory.inventory') }}"
+         class="sb-link {% if request.path == url_for('inventory.inventory') %}active{% endif %}">
         <span class="sb-icon"><i class="fas fa-boxes-stacked"></i></span>
         <span class="sb-text">Inventory</span>
       </a>
 
       <div class="sb-label">Catalogue</div>
-      <a href="{{ url_for('products') }}"
+      <a href="{{ url_for('products.products') }}"
          class="sb-link {% if '/products' in request.path or '/edit-product' in request.path or '/add-product' in request.path %}active{% endif %}">
         <span class="sb-icon"><i class="fas fa-box-open"></i></span>
         <span class="sb-text">Products</span>
       </a>
-      <a href="{{ url_for('add_ingredient') }}"
+      <a href="{{ url_for('inventory.add_ingredient') }}"
          class="sb-link {% if '/add-ingredient' in request.path %}active{% endif %}">
         <span class="sb-icon"><i class="fas fa-seedling"></i></span>
         <span class="sb-text">Ingredients</span>
@@ -633,7 +633,7 @@
         <div class="nb" id="notifBadge"></div>
       </div>
 
-      <a href="{{ url_for('logout') }}" class="sb-link">
+      <a href="{{ url_for('auth.logout') }}" class="sb-link">
         <span class="sb-icon"><i class="fas fa-arrow-right-from-bracket"></i></span>
         <span class="sb-text">Sign Out</span>
       </a>

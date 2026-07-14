@@ -200,7 +200,7 @@
       <h1><i class="fas fa-pen me-2" style="color:var(--accent)"></i>Edit Product</h1>
       <p>Update details, image, and recipe for <strong style="color:var(--accent2)">{{ product.name }}</strong></p>
     </div>
-    <a href="{{ url_for('products') }}" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Products</a>
+    <a href="{{ url_for('products.products') }}" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Products</a>
   </div>
 
   <form method="POST" action="/edit-product/{{ product.id }}" enctype="multipart/form-data" id="editProductForm">

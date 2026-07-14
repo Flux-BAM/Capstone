@@ -262,8 +262,8 @@
       <p>Manage your product catalogue and recipes</p>
     </div>
     <div class="header-actions">
-      <a href="{{ url_for('add_ingredient') }}" class="btn-ghost-sm"><i class="fas fa-seedling"></i> Add Ingredient</a>
-      <a href="{{ url_for('add_product') }}" class="btn-add-product"><i class="fas fa-plus"></i> Add Product</a>
+      <a href="{{ url_for('inventory.add_ingredient') }}" class="btn-ghost-sm"><i class="fas fa-seedling"></i> Add Ingredient</a>
+      <a href="{{ url_for('products.add_product') }}" class="btn-add-product"><i class="fas fa-plus"></i> Add Product</a>
     </div>
   </div>
 
@@ -338,7 +338,7 @@
     {% else %}
     <div class="empty-prod">
       <i class="fas fa-box-open"></i>
-      <p>No products yet. <a href="{{ url_for('add_product') }}" style="color:var(--accent)">Add your first product</a>.</p>
+      <p>No products yet. <a href="{{ url_for('products.add_product') }}" style="color:var(--accent)">Add your first product</a>.</p>
     </div>
     {% endfor %}
   </div>
