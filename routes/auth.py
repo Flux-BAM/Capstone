@@ -1,7 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, session
-from werkzeug.security import generate_password_hash, check_password_hash
-import MySQLdb.cursors
-from extensions import mysql
+from models.user import User
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -15,13 +13,13 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute("SELECT * FROM users WHERE username=%s", (username,))
-        user = cursor.fetchone()
-        if user and check_password_hash(user['password'], password):
+
+        # OOP: use User model to find and verify the user
+        user, hashed = User.find_by_username(username)
+        if user and User.verify_password(password, hashed):
             session['loggedin'] = True
-            session['id']       = user['id']
-            session['username'] = user['username']
+            session['id']       = user.id
+            session['username'] = user.username
             return redirect('/dashboard?login_success=true')
         else:
             error = True
@@ -35,13 +33,12 @@ def login():
 def register():
     if request.method == 'POST':
         username = request.form['username']
-        password = generate_password_hash(request.form['password'])
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute("SELECT * FROM users WHERE username=%s", (username,))
-        if cursor.fetchone():
+        password = request.form['password']
+
+        # OOP: use User model to check existence and create
+        if User.exists(username):
             return redirect('/?register_error=1')
-        cursor.execute("INSERT INTO users (username, password) VALUES (%s,%s)", (username, password))
-        mysql.connection.commit()
+        User.create(username, password)
         return redirect('/?register_success=1')
     return redirect('/')
 

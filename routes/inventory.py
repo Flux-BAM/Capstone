@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, session, jsonify, flash
-import MySQLdb.cursors
-from extensions import mysql
+from models.ingredient import Ingredient
 from helpers import is_logged_in
+from extensions import mysql
+import MySQLdb.cursors
 
 inventory_bp = Blueprint('inventory', __name__)
 
@@ -11,11 +12,10 @@ def inventory():
     if not is_logged_in():
         return redirect('/')
 
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-
     if request.method == 'POST':
         ingredient_id = request.form.get('ingredient_id')
         stock_raw     = request.form.get('stock', '').strip()
+
         try:
             stock = int(stock_raw)
             if stock < 0:
@@ -25,24 +25,22 @@ def inventory():
             flash("Invalid stock value.", "danger")
             return redirect('/inventory')
 
-        cursor.execute("SELECT id, name FROM ingredients WHERE id = %s", (ingredient_id,))
-        ingredient = cursor.fetchone()
+        # OOP: get Ingredient object then call update_stock()
+        ingredient = Ingredient.get_by_id(ingredient_id)
         if not ingredient:
             flash("Ingredient not found.", "danger")
             return redirect('/inventory')
 
         try:
-            cursor.execute("UPDATE ingredients SET stock = %s WHERE id = %s", (stock, ingredient_id))
-            mysql.connection.commit()
-            flash(f"Updated {ingredient['name']} stock to {stock}.", "success")
+            ingredient.update_stock(stock)
+            flash(f"Updated {ingredient.name} stock to {stock}.", "success")
         except Exception:
-            mysql.connection.rollback()
             flash("Failed to update stock.", "danger")
 
         return redirect('/inventory')
 
-    cursor.execute("SELECT * FROM ingredients ORDER BY name ASC")
-    ingredients = cursor.fetchall()
+    # OOP: Ingredient.get_all() returns list of Ingredient objects
+    ingredients = Ingredient.get_all()
     return render_template("inventory.html", ingredients=ingredients, username=session['username'])
 
 
@@ -61,23 +59,20 @@ def inventory_update():
     except (TypeError, ValueError):
         return jsonify({"status": "error", "message": "Invalid stock value."}), 400
 
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute("SELECT id, name FROM ingredients WHERE id = %s", (ingredient_id,))
-    ingredient = cursor.fetchone()
+    # OOP: get Ingredient object then update
+    ingredient = Ingredient.get_by_id(ingredient_id)
     if not ingredient:
         return jsonify({"status": "error", "message": "Ingredient not found."}), 404
 
     try:
-        cursor.execute("UPDATE ingredients SET stock = %s WHERE id = %s", (stock, ingredient_id))
-        mysql.connection.commit()
+        ingredient.update_stock(stock)
         return jsonify({
-            "status": "success",
-            "message": f"Updated {ingredient['name']} stock to {stock}.",
+            "status":        "success",
+            "message":       f"Updated {ingredient.name} stock to {stock}.",
             "ingredient_id": int(ingredient_id),
-            "stock": stock
+            "stock":         stock
         })
     except Exception:
-        mysql.connection.rollback()
         return jsonify({"status": "error", "message": "Failed to update stock."}), 500
 
 
@@ -128,7 +123,6 @@ def inventory_usage():
         }
         for r in rows
     ]
-
     return jsonify({"usage": usage, "period": period})
 
 
@@ -137,23 +131,18 @@ def inventory_servings():
     if not is_logged_in():
         return jsonify({}), 401
 
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute("SELECT id, name, category FROM products ORDER BY name ASC")
-    products = cursor.fetchall()
-
+    # OOP: use Product.get_all() to iterate products
+    from models.product import Product
+    all_products = Product.get_all()
     servings = []
-    for prod in products:
-        cursor.execute("""
-            SELECT r.ingredient_id, r.quantity, i.name AS ing_name, i.unit, i.stock
-            FROM recipes r
-            JOIN ingredients i ON r.ingredient_id = i.id
-            WHERE r.product_id = %s
-        """, (prod['id'],))
-        recipe = cursor.fetchall()
+
+    for prod in all_products:
+        # OOP: call get_recipe() on each Product object
+        recipe = prod.get_recipe()
 
         if not recipe:
             servings.append({
-                "id": prod['id'], "name": prod['name'], "category": prod['category'] or '',
+                "id": prod.id, "name": prod.name, "category": prod.category,
                 "max_servings": None, "limiting_ingredient": None,
                 "limiting_stock": None, "limiting_unit": None,
             })
@@ -161,24 +150,35 @@ def inventory_servings():
 
         max_servings = None; limiting_ing = None; limiting_stock = None; limiting_unit = None
 
-        for r in recipe:
+        # need stock per ingredient — fetch separately since get_recipe() joins
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute("""
+            SELECT r.quantity, i.name AS ing_name, i.unit, i.stock
+            FROM recipes r
+            JOIN ingredients i ON r.ingredient_id = i.id
+            WHERE r.product_id = %s
+        """, (prod.id,))
+        for r in cursor.fetchall():
             qty_per = float(r['quantity'] or 0)
             stock   = float(r['stock']    or 0)
-            if qty_per <= 0: continue
+            if qty_per <= 0:
+                continue
             possible = int(stock / qty_per)
             if max_servings is None or possible < max_servings:
-                max_servings = possible; limiting_ing = r['ing_name']
-                limiting_stock = round(stock, 2); limiting_unit = r['unit']
+                max_servings  = possible
+                limiting_ing  = r['ing_name']
+                limiting_stock = round(stock, 2)
+                limiting_unit  = r['unit']
 
         if max_servings is None:
             max_servings = 0
 
         servings.append({
-            "id": prod['id'], "name": prod['name'], "category": prod['category'] or '',
-            "max_servings": max_servings,
-            "limiting_ingredient": limiting_ing   if max_servings is not None else None,
-            "limiting_stock":      limiting_stock if max_servings is not None else None,
-            "limiting_unit":       limiting_unit  if max_servings is not None else None,
+            "id": prod.id, "name": prod.name, "category": prod.category,
+            "max_servings":        max_servings,
+            "limiting_ingredient": limiting_ing,
+            "limiting_stock":      limiting_stock,
+            "limiting_unit":       limiting_unit,
         })
 
     servings.sort(key=lambda x: (
@@ -187,7 +187,6 @@ def inventory_servings():
         else 2 if x['max_servings'] is None
         else 3
     ))
-
     return jsonify({"servings": servings})
 
 
@@ -196,9 +195,8 @@ def add_ingredient():
     if not is_logged_in():
         return redirect('/')
 
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute("SELECT * FROM ingredients ORDER BY name ASC")
-    ingredients = cursor.fetchall()
+    # OOP: get all Ingredient objects for the list display
+    ingredients = Ingredient.get_all()
 
     if request.method == 'POST':
         name  = request.form.get('name', '').strip()
@@ -214,23 +212,23 @@ def add_ingredient():
 
         try:
             stock = float(stock)
-            if stock < 0: raise ValueError
+            if stock < 0:
+                raise ValueError
         except ValueError:
             flash("Invalid stock value.", "danger")
             return render_template('add_ingredient.html', ingredients=ingredients)
 
-        cursor.execute("SELECT id FROM ingredients WHERE name = %s", (name,))
-        if cursor.fetchone():
+        # OOP: use Ingredient.exists() to check for duplicates
+        if Ingredient.exists(name):
             flash(f"'{name}' already exists.", "warning")
             return render_template('add_ingredient.html', ingredients=ingredients)
 
         try:
-            cursor.execute("INSERT INTO ingredients (name, stock, unit) VALUES (%s,%s,%s)", (name, stock, unit))
-            mysql.connection.commit()
+            # OOP: Ingredient.create() inserts the new record
+            Ingredient.create(name, stock, unit)
             flash(f"'{name}' added successfully!", "success")
             return redirect('/add-ingredient')
         except Exception:
-            mysql.connection.rollback()
             flash("Failed to save ingredient.", "danger")
             return render_template('add_ingredient.html', ingredients=ingredients)
 
@@ -242,17 +240,13 @@ def delete_ingredient(ingredient_id):
     if not is_logged_in():
         return jsonify({"status": "error", "message": "Unauthorized"}), 401
 
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute("SELECT name FROM ingredients WHERE id = %s", (ingredient_id,))
-    ingredient = cursor.fetchone()
+    # OOP: get Ingredient object then call delete()
+    ingredient = Ingredient.get_by_id(ingredient_id)
     if not ingredient:
         return jsonify({"status": "error", "message": "Ingredient not found."}), 404
 
     try:
-        cursor.execute("DELETE FROM recipes     WHERE ingredient_id = %s", (ingredient_id,))
-        cursor.execute("DELETE FROM ingredients WHERE id = %s",            (ingredient_id,))
-        mysql.connection.commit()
-        return jsonify({"status": "success", "message": f"'{ingredient['name']}' deleted."})
+        ingredient.delete()
+        return jsonify({"status": "success", "message": f"'{ingredient.name}' deleted."})
     except Exception:
-        mysql.connection.rollback()
         return jsonify({"status": "error", "message": "Failed to delete ingredient."}), 500

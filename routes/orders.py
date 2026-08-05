@@ -1,7 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, session, jsonify, flash
-import MySQLdb.cursors
-from extensions import mysql
+from models.product import Product
+from models.sale import Sale
 from helpers import is_logged_in, parse_iso_date
+from extensions import mysql
+import MySQLdb.cursors
 
 orders_bp = Blueprint('orders', __name__)
 
@@ -11,28 +13,26 @@ def orders():
     if not is_logged_in():
         return redirect('/')
 
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-
     if request.method == 'POST':
         product_id = request.form['product_id']
         quantity   = int(request.form['quantity'])
-        cursor.execute("SELECT price FROM products WHERE id=%s", (product_id,))
-        product  = cursor.fetchone()
-        price    = product['price']
-        subtotal = quantity * price
-        cursor.execute("INSERT INTO sales (total, created_at) VALUES (%s, NOW())", (subtotal,))
-        sale_id = cursor.lastrowid
-        cursor.execute("""
-            INSERT INTO sale_items (sale_id, product_id, quantity, price, subtotal)
-            VALUES (%s,%s,%s,%s,%s)
-        """, (sale_id, product_id, quantity, price, subtotal))
-        cursor.execute("UPDATE products SET stock = stock - %s WHERE id=%s", (quantity, product_id))
-        mysql.connection.commit()
+
+        # OOP: get Product object to access price
+        product  = Product.get_by_id(product_id)
+        subtotal = quantity * float(product.price)
+
+        # OOP: Sale.create() handles the full transaction
+        Sale.create('Walk-in', subtotal, [{
+            'id':       product_id,
+            'qty':      quantity,
+            'price':    float(product.price),
+            'subtotal': subtotal
+        }])
         return redirect('/orders')
 
-    cursor.execute("SELECT * FROM products")
-    products = cursor.fetchall()
-    return render_template('orders.html', products=products, username=session['username'])
+    # OOP: Product.get_all() returns list of Product objects
+    all_products = Product.get_all()
+    return render_template('orders.html', products=all_products, username=session['username'])
 
 
 @orders_bp.route('/submit_order', methods=['POST'])
@@ -52,38 +52,21 @@ def submit_order():
     if not isinstance(cart, list) or not cart:
         return jsonify({"status": "error", "message": "Cart is empty"}), 400
 
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-
     try:
         total = sum(float(item['subtotal']) for item in cart)
     except (KeyError, TypeError, ValueError):
         return jsonify({"status": "error", "message": "Invalid cart values"}), 400
 
-    for item in cart:
-        cursor.execute("SELECT ingredient_id, quantity FROM recipes WHERE product_id = %s", (item['id'],))
-        for r in cursor.fetchall():
-            cursor.execute("SELECT stock FROM ingredients WHERE id=%s", (r['ingredient_id'],))
-            current = cursor.fetchone()['stock']
-            if current < r['quantity'] * item['qty']:
-                return jsonify({"status": "error", "message": "Not enough ingredients"}), 400
+    # OOP: Sale.check_stock() validates ingredients before inserting
+    stock_error = Sale.check_stock(cart)
+    if stock_error:
+        return jsonify({"status": "error", "message": stock_error}), 400
 
     try:
-        cursor.execute("INSERT INTO sales (customer_name,total,created_at) VALUES (%s,%s,NOW())", (customer, total))
-        sale_id = cursor.lastrowid
-        for item in cart:
-            cursor.execute("""
-                INSERT INTO sale_items (sale_id,product_id,quantity,price,subtotal)
-                VALUES (%s,%s,%s,%s,%s)
-            """, (sale_id, item['id'], item['qty'], item['price'], item['subtotal']))
-            cursor.execute("UPDATE products SET stock=stock-%s WHERE id=%s", (item['qty'], item['id']))
-            cursor.execute("SELECT ingredient_id, quantity FROM recipes WHERE product_id = %s", (item['id'],))
-            for r in cursor.fetchall():
-                cursor.execute("UPDATE ingredients SET stock = stock - %s WHERE id = %s",
-                               (r['quantity'] * item['qty'], r['ingredient_id']))
-        mysql.connection.commit()
+        # OOP: Sale.create() handles full transaction atomically
+        Sale.create(customer, total, cart)
         return jsonify({"status": "success"})
     except Exception:
-        mysql.connection.rollback()
         return jsonify({"status": "error", "message": "Failed to save order"}), 500
 
 
