@@ -14,6 +14,7 @@ app.config['MYSQL_HOST']     = os.environ.get('MYSQL_HOST', 'localhost')
 app.config['MYSQL_USER']     = os.environ.get('MYSQL_USER', 'root')
 app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD', '')
 app.config['MYSQL_DB']       = os.environ.get('MYSQL_DB', 'brewinsight')
+app.config['MYSQL_PORT'] = int(os.environ.get('MYSQLPORT', 3306))
 
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images')
 
