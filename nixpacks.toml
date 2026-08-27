@@ -1,8 +1,0 @@
-[phases.setup]
-aptPkgs = ["libmariadb3", "libmariadb-dev"]
-
-[phases.install]
-cmds = ["pip install -r requirements.txt"]
-
-[start]
-cmd = "gunicorn app:app"
