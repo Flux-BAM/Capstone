@@ -228,7 +228,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
     <div class="tb-tools">
       <div class="fg" id="filterGroup">
-        <button class="btn-f" data-range="all">All</button>
+        
         <button class="btn-f active" data-range="today">Today</button>
         <button class="btn-f" data-range="7d">7 Days</button>
         <button class="btn-f" data-range="30d">30 Days</button>
@@ -1084,7 +1084,7 @@ document.addEventListener("keydown",function(e){
   if(e.key==="Escape"){closeCR();return}
   if(crBar.classList.contains("open"))return;
   if(e.key==="r"){document.getElementById("refreshBtn").click();return}
-  var map={a:"all",t:"today","7":"7d","3":"30d"};
+  var map={t:"today","7":"7d","3":"30d"};
   if(map[e.key]){var b=document.querySelector('[data-range="'+map[e.key]+'"]');if(b)setFilter(b,map[e.key])}
 });
 
