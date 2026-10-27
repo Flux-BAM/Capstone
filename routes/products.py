@@ -12,7 +12,7 @@ MAX_IMAGE_SIZE = 5 * 1024 * 1024
 @products_bp.route('/products')
 def products():
     if not is_logged_in():
-        return redirect('/')
+        return redirect('/login')
     # OOP: Product.get_all() returns a list of Product objects
     all_products = Product.get_all()
     return render_template('products.html', products=all_products, username=session['username'])
@@ -21,7 +21,7 @@ def products():
 @products_bp.route('/add-product', methods=['GET', 'POST'])
 def add_product():
     if not is_logged_in():
-        return redirect('/')
+        return redirect('/login')
 
     # OOP: Ingredient.get_all_for_select() returns dropdown data
     ingredients = Ingredient.get_all_for_select()
@@ -114,7 +114,7 @@ def get_recipe(product_id):
 @products_bp.route('/edit-product/<int:product_id>', methods=['GET'])
 def edit_product(product_id):
     if not is_logged_in():
-        return redirect('/')
+        return redirect('/login')
 
     # OOP: fetch Product object
     product = Product.get_by_id(product_id)
@@ -131,7 +131,7 @@ def edit_product(product_id):
 @products_bp.route('/edit-product/<int:product_id>', methods=['POST'])
 def edit_product_save(product_id):
     if not is_logged_in():
-        return redirect('/')
+        return redirect('/login')
 
     # OOP: fetch Product object
     product = Product.get_by_id(product_id)

@@ -4,7 +4,7 @@ from models.user import User
 auth_bp = Blueprint('auth', __name__)
 
 
-@auth_bp.route('/', methods=['GET', 'POST'])
+@auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     error = False
     register_success = request.args.get('register_success')
@@ -37,10 +37,10 @@ def register():
 
         # OOP: use User model to check existence and create
         if User.exists(username):
-            return redirect('/?register_error=1')
+            return redirect('/login?register_error=1')
         User.create(username, password)
-        return redirect('/?register_success=1')
-    return redirect('/')
+        return redirect('/login?register_success=1')
+    return redirect('/login')
 
 
 @auth_bp.route('/logout')

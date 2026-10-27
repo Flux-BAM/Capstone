@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17110d">
+  <meta name="description" content="Explore the Kape Tubong coffee and beverage menu.">
+  <title>Kape Tubong | Coffee & More</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#home" aria-label="Kape Tubong home">
+      <span class="brand-mark">☕</span>
+      <span><strong>Kape Tubong</strong><small>Good coffee. Better days.</small></span>
+    </a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+    <nav class="nav-links" id="navLinks">
+      <a class="active" href="#home">Home</a>
+      <a href="#menu">Menu</a>
+      <a href="#about">About</a>
+      <a class="login-link" href="{{ url_for('auth.login') }}">Staff Login <span aria-hidden="true">↗</span></a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <p class="eyebrow">YOUR COFFEE BREAK STARTS HERE</p>
+        <h1>Good coffee.<br><em>Good moments.</em></h1>
+        <p class="hero-copy">Find your next favorite drink at Kape Tubong. Explore our coffee and refreshing beverages, made for every kind of day.</p>
+        <a class="primary-button" href="#menu">Explore the menu <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="hero-note"><span class="note-line"></span> BREWED FOR YOUR EVERYDAY</div>
+    </section>
+
+    <section class="welcome-strip" aria-label="Our values">
+      <div><span class="value-icon">✦</span><strong>Made for your moments</strong><small>A little pause in a busy day.</small></div>
+      <div><span class="value-icon">☕</span><strong>Drinks for every mood</strong><small>Explore the menu and find your favorite.</small></div>
+      <div><span class="value-icon">♡</span><strong>Local coffee shop</strong><small>Warm service, one cup at a time.</small></div>
+    </section>
+
+    <section class="menu-section section-wrap" id="menu">
+      <div class="section-heading">
+        <div><p class="eyebrow dark-eyebrow">TAKE A LOOK</p><h2>Find your <em>favorite.</em></h2><p class="section-copy">Browse the drinks available on our menu.</p></div>
+        <div class="menu-search"><span aria-hidden="true">⌕</span><input id="menuSearch" type="search" placeholder="Search drinks..." aria-label="Search menu"></div>
+      </div>
+      <div class="category-list" id="categoryList">
+        <button class="category-chip selected" data-category="all">All items</button>
+        {% for category in categories %}
+        <button class="category-chip" data-category="{{ category|lower }}">{{ category }}</button>
+        {% endfor %}
+      </div>
+
+      {% if products %}
+      <div class="product-grid" id="productGrid">
+        {% for product in products %}
+        <article class="product-card" data-name="{{ product.name|lower }}" data-category="{{ product.category|lower }}">
+          <div class="product-photo">
+            {% if product.image_url %}
+            <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
+            {% else %}
+            <div class="photo-placeholder" aria-label="No product image available"><span>☕</span><small>Kape Tubong</small></div>
+            {% endif %}
+            <span class="photo-category">{{ product.category }}</span>
+          </div>
+          <div class="product-info">
+            <div><h3>{{ product.name }}</h3><p>{{ product.category }}</p></div>
+            <strong class="product-price">₱{{ "%.2f"|format(product.price|float) }}</strong>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      <p class="empty-state" id="emptyState" hidden>No drinks match your search. Try another name or category.</p>
+      {% else %}
+      <div class="menu-empty"><span>☕</span><h3>Our menu is being prepared.</h3><p>Please check back soon, or ask our staff about today's drinks.</p></div>
+      {% endif %}
+      <p class="menu-disclaimer">Menu and prices are displayed for browsing. Please confirm availability and final prices with our staff.</p>
+    </section>
+
+    <section class="about-section" id="about">
+      <div class="about-photo" role="img" aria-label="Warm coffee shop atmosphere"><div class="about-stamp">KAPE<br><span>TUBONG</span></div></div>
+      <div class="about-content">
+        <p class="eyebrow">A LITTLE ABOUT US</p>
+        <h2>Your coffee break,<br><em>your kind of moment.</em></h2>
+        <p>Kape Tubong is built around the simple joy of enjoying a good drink. Browse our menu, discover something new, and find a favorite for your day.</p>
+        <div class="about-divider"></div>
+        <p class="system-note"><strong>Behind every cup is a smarter system.</strong><br>Kape Tubong also uses a point-of-sale and analytics system to help staff record sales, manage products and ingredients, and understand business trends.</p>
+        <a href="#menu" class="text-link">Explore our menu <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a class="brand footer-brand" href="#home"><span class="brand-mark">☕</span><span><strong>Kape Tubong</strong><small>Good coffee. Better days.</small></span></a>
+    <p>Discover your next favorite cup.</p>
+    <div class="footer-links"><a href="#home">Home</a><a href="#menu">Menu</a><a href="#about">About</a><a href="{{ url_for('auth.login') }}">Staff Login</a></div>
+    <small class="copyright">© {{ 2026 }} Kape Tubong. All rights reserved.</small>
+  </footer>
+
+  <script>
+    const searchInput = document.getElementById('menuSearch');
+    const cards = [...document.querySelectorAll('.product-card')];
+    const chips = [...document.querySelectorAll('.category-chip')];
+    const emptyState = document.getElementById('emptyState');
+    let selectedCategory = 'all';
+
+    function filterMenu() {
+      const term = (searchInput?.value || '').trim().toLowerCase();
+      let visible = 0;
+      cards.forEach(card => {
+        const matchesName = card.dataset.name.includes(term);
+        const matchesCategory = selectedCategory === 'all' || card.dataset.category === selectedCategory;
+        const show = matchesName && matchesCategory;
+        card.hidden = !show;
+        if (show) visible++;
+      });
+      if (emptyState) emptyState.hidden = visible !== 0;
+    }
+    searchInput?.addEventListener('input', filterMenu);
+    chips.forEach(chip => chip.addEventListener('click', () => {
+      selectedCategory = chip.dataset.category;
+      chips.forEach(item => item.classList.toggle('selected', item === chip));
+      filterMenu();
+    }));
+    const menuToggle = document.getElementById('menuToggle');
+    const navLinks = document.getElementById('navLinks');
+    menuToggle?.addEventListener('click', () => {
+      const open = navLinks.classList.toggle('open');
+      menuToggle.setAttribute('aria-expanded', String(open));
+    });
+    navLinks?.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
+      navLinks.classList.remove('open');
+      menuToggle?.setAttribute('aria-expanded', 'false');
+    }));
+  </script>
+</body>
+</html>

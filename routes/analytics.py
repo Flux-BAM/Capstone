@@ -12,7 +12,7 @@ analytics_bp = Blueprint('analytics', __name__)
 @analytics_bp.route('/dashboard')
 def dashboard():
     if not is_logged_in():
-        return redirect('/')
+        return redirect('/login')
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     today  = datetime.date.today()
@@ -398,7 +398,7 @@ def analytics_filter():
 @analytics_bp.route('/export-csv')
 def export_csv():
     if not is_logged_in():
-        return redirect('/')
+        return redirect('/login')
 
     range_type = request.args.get('range', 'today')
     from_date  = request.args.get('from')

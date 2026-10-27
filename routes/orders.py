@@ -11,7 +11,7 @@ orders_bp = Blueprint('orders', __name__)
 @orders_bp.route('/orders', methods=['GET', 'POST'])
 def orders():
     if not is_logged_in():
-        return redirect('/')
+        return redirect('/login')
 
     if request.method == 'POST':
         product_id = request.form['product_id']
@@ -73,7 +73,7 @@ def submit_order():
 @orders_bp.route('/view_orders')
 def view_orders():
     if not is_logged_in():
-        return redirect('/')
+        return redirect('/login')
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     q         = (request.args.get('q') or '').strip()
@@ -149,7 +149,7 @@ def view_orders():
 @orders_bp.route('/done_order/<int:item_id>', methods=['POST'])
 def done_order(item_id):
     if not is_logged_in():
-        return redirect('/')
+        return redirect('/login')
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute("DELETE FROM sale_items WHERE id = %s", (item_id,))
     mysql.connection.commit()

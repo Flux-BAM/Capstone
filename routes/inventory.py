@@ -10,7 +10,7 @@ inventory_bp = Blueprint('inventory', __name__)
 @inventory_bp.route('/inventory', methods=['GET', 'POST'])
 def inventory():
     if not is_logged_in():
-        return redirect('/')
+        return redirect('/login')
 
     if request.method == 'POST':
         ingredient_id = request.form.get('ingredient_id')
@@ -193,7 +193,7 @@ def inventory_servings():
 @inventory_bp.route('/add-ingredient', methods=['GET', 'POST'])
 def add_ingredient():
     if not is_logged_in():
-        return redirect('/')
+        return redirect('/login')
 
     # OOP: get all Ingredient objects for the list display
     ingredients = Ingredient.get_all()
