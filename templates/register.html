@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create Customer Account | Kape Tubong</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+  :root {
+    color-scheme: dark;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 22px;
+    background: radial-gradient(ellipse at top, #3a291b, #100e0b 65%);
+    font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+    color: #f3ece2;
+    font-size: 12px;
+  }
+
+  .card {
+    width: min(100%, 460px);
+    background: #191612;
+    border: 1px solid #3a3024;
+    border-radius: 22px;
+    padding: clamp(24px, 5vw, 38px);
+    box-shadow: 0 24px 70px #0008;
+  }
+
+  .brand {
+    color: #d4a96a;
+    font-weight: 800;
+    letter-spacing: .03em;
+    font-size: 14px;
+  }
+
+  .muted {
+    color: #b4a797;
+    font-size: 11px;
+  }
+
+  .form-label {
+    color: #e7d9c7;
+    font-size: 11px;
+  }
+
+  .form-control {
+    background: #100e0b;
+    border: 1px solid #4b3d2d;
+    color: #fff;
+    padding: 9px;
+    font-size: 12px;
+  }
+
+  .form-control:focus {
+    background: #100e0b;
+    color: #fff;
+    border-color: #d4a96a;
+    box-shadow: 0 0 0 .2rem #d4a96a22;
+  }
+
+  .btn-coffee {
+    background: #d4a96a;
+    color: #17110d;
+    font-weight: 700;
+    border: 0;
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .btn-coffee:hover {
+    background: #e8c490;
+    color: #17110d;
+  }
+
+  .link {
+    color: #e5bd82;
+    font-size: 11px;
+  }
+
+  .alert {
+    font-size: 11px;
+  }
+
+  .small-note {
+    font-size: 10px;
+    color: #a89b8c;
+  }
+</style>
+</head>
+<body><main class="card">
+  <div class="brand mb-2">☕ KAPE TUBONG</div><h1 class="h3 mb-2">Create your customer account</h1>
+  <p class="muted mb-4">Register to access your customer page. This account will not provide access to staff POS features.</p>
+  {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+  <form method="post" autocomplete="on">
+    <div class="mb-3"><label class="form-label" for="username">Username</label><input class="form-control" id="username" name="username" minlength="3" maxlength="50" pattern="[A-Za-z0-9_.-]{3,50}" autocomplete="username" required value="{{ request.form.get('username','') }}"><div class="form-text small-note">3–50 characters: letters, numbers, dots, underscores, or hyphens.</div></div>
+    <div class="mb-3"><label class="form-label" for="password">Password</label><input class="form-control" id="password" name="password" type="password" minlength="8" autocomplete="new-password" required><div class="form-text small-note">Use at least 8 characters.</div></div>
+    <div class="mb-4"><label class="form-label" for="confirm_password">Confirm password</label><input class="form-control" id="confirm_password" name="confirm_password" type="password" minlength="8" autocomplete="new-password" required></div>
+    <button class="btn btn-coffee w-100" type="submit">Create Customer Account</button>
+  </form>
+  <p class="text-center mt-4 mb-2">Already registered? <a class="link" href="{{ url_for('auth.login') }}">Sign in</a></p>
+  <p class="text-center mb-0"><a class="link" href="{{ url_for('public_home') }}">← Back to public menu</a></p>
+</main></body></html>

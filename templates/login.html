@@ -336,21 +336,22 @@
         <div class="login-brand-icon"><i class="fas fa-mug-hot"></i></div>
         <div class="login-brand-text">
           <strong>Kape Tubong</strong>
-          <span>POS System</span>
+          <span>Customer & Staff Access</span>
         </div>
       </div>
 
       <h1 class="login-heading">Welcome back</h1>
-      <p class="login-subhead">Sign in to your account to continue</p>
+      <p class="login-subhead">Sign in to continue to your Kape Tubong account.</p>
 
       <!-- Alerts -->
-      {% if register_success %}
-      <div class="login-alert success"><i class="fas fa-circle-check"></i> Account created successfully!</div>
+      {% if request.args.get('registered') %}
+      <div class="login-alert success"><i class="fas fa-check-circle"></i> Account created. Please sign in.</div>
       {% endif %}
-
-      {% if register_error %}
-      <div class="login-alert danger"><i class="fas fa-circle-xmark"></i> Username already exists.</div>
-      {% endif %}
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="login-alert {{ 'success' if category == 'success' else 'info' }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
 
       {% if request.args.get('logout_success') %}
       <div class="login-alert info"><i class="fas fa-arrow-right-from-bracket"></i> You have been signed out.</div>
@@ -371,11 +372,11 @@
         <button class="btn-login" type="submit">Sign In</button>
       </form>
 
-      <div class="login-divider"><span>or</span></div>
-
+      <div class="login-divider"><span>ACCOUNT ACCESS</span></div>
       <div class="login-register-link">
-        Don't have an account?
-        <a href="#" data-bs-toggle="modal" data-bs-target="#registerModal">Create one</a>
+        New customer? <a href="{{ url_for('auth.register') }}">Create an account</a><br>
+        Staff accounts are created by an authorized administrator.
+        <br><a href="{{ url_for('public_home') }}">← Back to public menu</a>
       </div>
 
     </div>
@@ -400,39 +401,6 @@
 })();
 </script>
 {% endif %}
-
-<!-- Register Modal -->
-<div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-
-      <form method="POST" action="/register" autocomplete="off">
-        <div class="modal-header">
-          <h5 class="modal-title" id="registerModalLabel">
-            <i class="fas fa-user-plus me-2" style="color:#d4a96a"></i>Create Account
-          </h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-
-        <div class="modal-body">
-          <div class="field-group">
-            <label class="field-label">Username</label>
-            <input class="field-input" type="text" name="username" placeholder="Choose a username" required autocomplete="off">
-          </div>
-          <div class="field-group" style="margin-bottom:0">
-            <label class="field-label">Password</label>
-            <input class="field-input" type="password" name="password" placeholder="Choose a password" required autocomplete="new-password">
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button type="submit" class="btn-register">Create Account</button>
-        </div>
-      </form>
-
-    </div>
-  </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
